@@ -10,6 +10,13 @@ interface PDFGeneratorProps {
 }
 
 export function PDFGenerator({ budget, clientes, disabled = false }: PDFGeneratorProps) {
+  const formatCurrency = (value: number) => {
+    return value.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  };
+
   const generatePDF = async () => {
     const doc = new jsPDF();
     
@@ -81,7 +88,7 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
         const subtotal = item.quantity * parseFloat(item.price);
         total += subtotal;
         
-        doc.text(`${item.quantity}x ${item.product_name} - R$ ${subtotal.toFixed(2)}`, 20, yPosition);
+        doc.text(`${item.quantity}x ${item.product_name} - R$ ${formatCurrency(subtotal)}`, 20, yPosition);
         yPosition += 10;
       });
     }
@@ -95,7 +102,7 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
     // Total
     yPosition += 15;
     doc.setFontSize(14);
-    doc.text(`Total: R$ ${total.toFixed(2)}`, 20, yPosition);
+    doc.text(`Total: R$ ${formatCurrency(total)}`, 20, yPosition);
     
     // Save
     const fileName = `orcamento_${budget.client_name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`;
