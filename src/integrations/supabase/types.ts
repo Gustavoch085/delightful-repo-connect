@@ -320,6 +320,45 @@ export type Database = {
         }
         Relationships: []
       }
+      relatorios_mensais: {
+        Row: {
+          ano: number
+          created_at: string
+          despesas: Json
+          faturas: Json
+          id: string
+          lucro_liquido: number
+          mes: number
+          total_despesas: number
+          total_receitas: number
+          updated_at: string
+        }
+        Insert: {
+          ano: number
+          created_at?: string
+          despesas?: Json
+          faturas?: Json
+          id?: string
+          lucro_liquido?: number
+          mes: number
+          total_despesas?: number
+          total_receitas?: number
+          updated_at?: string
+        }
+        Update: {
+          ano?: number
+          created_at?: string
+          despesas?: Json
+          faturas?: Json
+          id?: string
+          lucro_liquido?: number
+          mes?: number
+          total_despesas?: number
+          total_receitas?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

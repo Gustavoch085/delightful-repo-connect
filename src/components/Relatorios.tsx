@@ -1,26 +1,67 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TrendingUp, TrendingDown, DollarSign, Edit, Trash2, Plus, User } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, Edit, Trash2, Plus, User, Calendar } from "lucide-react";
 import { DespesaModal } from "./modals/DespesaModal";
 import { FaturaModal } from "./modals/FaturaModal";
+import { RelatorioMensalModal } from "./modals/RelatorioMensalModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { useMonthlyArchive } from "@/hooks/useMonthlyArchive";
 
 export function Relatorios() {
   const [despesaModalOpen, setDespesaModalOpen] = useState(false);
   const [faturaModalOpen, setFaturaModalOpen] = useState(false);
+  const [relatorioMensalModalOpen, setRelatorioMensalModalOpen] = useState(false);
   const [editingDespesa, setEditingDespesa] = useState(null);
   const [editingFatura, setEditingFatura] = useState(null);
   const [selectedClient, setSelectedClient] = useState<string>("all");
+  const [previousMonthReport, setPreviousMonthReport] = useState(null);
+
+  // Hook for monthly archiving
+  useMonthlyArchive();
 
   // Pega o mês/ano atual para filtrar
   const currentDate = new Date();
   const currentMonth = currentDate.getMonth() + 1; // JavaScript months are 0-based
   const currentYear = currentDate.getFullYear();
+
+  // Calcular mês anterior
+  let previousMonth = currentMonth - 1;
+  let previousYear = currentYear;
+  
+  if (previousMonth === 0) {
+    previousMonth = 12;
+    previousYear = currentYear - 1;
+  }
+
+  const getMonthName = (month: number) => {
+    const months = [
+      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
+    return months[month - 1];
+  };
+
+  // Buscar relatório do mês anterior
+  const { data: previousReport } = useQuery({
+    queryKey: ['relatorio-mensal', previousMonth, previousYear],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('relatorios_mensais')
+        .select('*')
+        .eq('mes', previousMonth)
+        .eq('ano', previousYear)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+        throw error;
+      }
+      return data;
+    }
+  });
 
   // Buscar despesas do Supabase
   const { data: expenses = [], refetch: refetchExpenses } = useQuery({
@@ -278,9 +319,27 @@ export function Relatorios() {
     refetchRevenues();
   };
 
+  const handleShowPreviousMonthReport = () => {
+    setPreviousMonthReport(previousReport);
+    setRelatorioMensalModalOpen(true);
+  };
+
   return (
     <div className="p-6 bg-crm-dark min-h-screen">
-      <h1 className="text-3xl font-bold text-white mb-8">Relatórios Financeiros</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold text-white">Relatórios Financeiros</h1>
+        
+        {/* Botão do relatório do mês anterior */}
+        {previousReport && (
+          <Button
+            onClick={handleShowPreviousMonthReport}
+            className="bg-purple-600 hover:bg-purple-700"
+          >
+            <Calendar className="h-4 w-4 mr-2" />
+            Relatório de {getMonthName(previousMonth)} {previousYear}
+          </Button>
+        )}
+      </div>
       
       {/* Financial Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -462,7 +521,7 @@ export function Relatorios() {
       </Card>
 
       <DespesaModal
-        open={despesaModalOpen}
+        open={despesaModalOpen}  
         onOpenChange={setDespesaModalOpen}
         despesa={editingDespesa}
         onSave={handleSaveDespesa}
@@ -473,6 +532,12 @@ export function Relatorios() {
         onOpenChange={setFaturaModalOpen}
         fatura={editingFatura}
         onSave={handleSaveFatura}
+      />
+
+      <RelatorioMensalModal
+        open={relatorioMensalModalOpen}
+        onOpenChange={setRelatorioMensalModalOpen}
+        relatorio={previousMonthReport}
       />
     </div>
   );
