@@ -329,16 +329,14 @@ export function Relatorios() {
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-white">Relatórios Financeiros</h1>
         
-        {/* Botão do relatório do mês anterior */}
-        {previousReport && (
-          <Button
-            onClick={handleShowPreviousMonthReport}
-            className="bg-purple-600 hover:bg-purple-700"
-          >
-            <Calendar className="h-4 w-4 mr-2" />
-            Relatório de {getMonthName(previousMonth)} {previousYear}
-          </Button>
-        )}
+        {/* Botão do relatório do mês anterior - sempre visível */}
+        <Button
+          onClick={handleShowPreviousMonthReport}
+          className="bg-purple-600 hover:bg-purple-700"
+        >
+          <Calendar className="h-4 w-4 mr-2" />
+          Relatório de {getMonthName(previousMonth)} {previousYear}
+        </Button>
       </div>
       
       {/* Financial Stats */}
