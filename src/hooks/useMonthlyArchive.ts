@@ -65,7 +65,7 @@ export const useMonthlyArchive = () => {
         const netProfit = totalRevenues - totalExpenses;
         
         // Arquivar o relatório
-        const { error } = await supabase
+        const { error: archiveError } = await supabase
           .from('relatorios_mensais')
           .insert({
             mes: previousMonth,
@@ -77,10 +77,41 @@ export const useMonthlyArchive = () => {
             faturas: revenues || []
           });
         
-        if (error) {
-          console.error('Erro ao arquivar relatório mensal:', error);
-        } else {
-          console.log(`Relatório de ${previousMonth}/${previousYear} arquivado com sucesso`);
+        if (archiveError) {
+          console.error('Erro ao arquivar relatório mensal:', archiveError);
+          return;
+        }
+        
+        console.log(`Relatório de ${previousMonth}/${previousYear} arquivado com sucesso`);
+        
+        // Após arquivar com sucesso, excluir despesas do mês anterior
+        if (expenses && expenses.length > 0) {
+          const expenseIds = expenses.map(expense => expense.id);
+          const { error: deleteExpensesError } = await supabase
+            .from('despesas')
+            .delete()
+            .in('id', expenseIds);
+          
+          if (deleteExpensesError) {
+            console.error('Erro ao excluir despesas do mês anterior:', deleteExpensesError);
+          } else {
+            console.log(`${expenses.length} despesas do mês anterior excluídas`);
+          }
+        }
+        
+        // Após arquivar com sucesso, excluir faturas do mês anterior
+        if (revenues && revenues.length > 0) {
+          const revenueIds = revenues.map(revenue => revenue.id);
+          const { error: deleteRevenuesError } = await supabase
+            .from('faturas')
+            .delete()
+            .in('id', revenueIds);
+          
+          if (deleteRevenuesError) {
+            console.error('Erro ao excluir faturas do mês anterior:', deleteRevenuesError);
+          } else {
+            console.log(`${revenues.length} faturas do mês anterior excluídas`);
+          }
         }
         
       } catch (error) {
