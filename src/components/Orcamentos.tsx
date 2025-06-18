@@ -2,14 +2,13 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Edit, RefreshCw, ShoppingCart } from "lucide-react";
+import { Plus, Trash2, Edit, RefreshCw } from "lucide-react";
 import { OrcamentoModal } from "./modals/OrcamentoModal";
 import { PDFGenerator } from "./PDFGenerator";
 import { useLogs } from "@/contexts/LogsContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Type definitions for better TypeScript support
 interface BudgetData {
@@ -68,7 +67,7 @@ export function Orcamentos() {
     return `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
   };
 
-  // Query para buscar orçamentos
+  // Query para buscar orçamentos - apenas status "Aguardando"
   const { data: budgets = [], isLoading, refetch } = useQuery({
     queryKey: ['orcamentos'],
     queryFn: async () => {
@@ -85,6 +84,7 @@ export function Orcamentos() {
             subtotal
           )
         `)
+        .eq('status', 'Aguardando')
         .order('created_at', { ascending: false });
       
       if (error) {
@@ -509,10 +509,6 @@ export function Orcamentos() {
     }
   };
 
-  // Separar orçamentos por status - apenas Aguardando e Venda Gerada
-  const pendingBudgets = budgets.filter(budget => budget.status === 'Aguardando');
-  const salesGenerated = budgets.filter(budget => budget.status === 'Venda Gerada');
-
   if (isLoading) {
     return (
       <div className="p-6 bg-crm-dark min-h-screen flex items-center justify-center">
@@ -561,164 +557,90 @@ export function Orcamentos() {
         </div>
       )}
 
-      {/* Tabs para separar orçamentos pendentes e vendas geradas */}
-      <Tabs defaultValue="orcamentos" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 bg-crm-dark mb-6">
-          <TabsTrigger value="orcamentos" className="text-gray-300 data-[state=active]:text-white">
-            Orçamentos Pendentes ({pendingBudgets.length})
-          </TabsTrigger>
-          <TabsTrigger value="vendas-geradas" className="text-gray-300 data-[state=active]:text-white">
-            <ShoppingCart className="h-4 w-4 mr-2" />
-            Vendas Geradas ({salesGenerated.length})
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="orcamentos">
-          {/* Orçamentos Pendentes */}
-          <div className="grid grid-cols-1 gap-6">
-            {pendingBudgets.map((budget) => {
-              // Encontrar dados completos do cliente
-              const cliente = clientes.find(c => c.name === budget.client_name);
-              
-              return (
-                <Card key={budget.id} className="bg-crm-card border-crm-border">
-                  <CardContent className="p-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-xl font-semibold text-white">{budget.title}</h3>
-                          <Select
-                            value={budget.status}
-                            onValueChange={(value) => handleStatusChange(budget.id, value)}
-                            disabled={updateStatusMutation.isPending}
-                          >
-                            <SelectTrigger className={`w-36 ${getStatusColor(budget.status)} border-none`}>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent className="bg-crm-dark border-crm-border">
-                              <SelectItem value="Aguardando" className="text-white">Aguardando</SelectItem>
-                              <SelectItem value="Venda Gerada" className="text-white">Venda Gerada</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <PDFGenerator 
-                            budget={budget} 
-                            clientes={clientes}
-                            disabled={updateBudgetMutation.isPending || deleteBudgetMutation.isPending}
-                          />
-                          <Button 
-                            size="sm" 
-                            variant="ghost" 
-                            onClick={() => handleEditBudget(budget)}
-                            className="text-gray-400 hover:text-blue-400"
-                            disabled={updateBudgetMutation.isPending}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="ghost" 
-                            onClick={() => handleDeleteBudget(budget.id)}
-                            className="text-gray-400 hover:text-red-400"
-                            disabled={deleteBudgetMutation.isPending}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <p className="text-gray-400">{budget.client_name}</p>
-                        {cliente?.address && (
-                          <p className="text-gray-400 text-sm">Endereço: {cliente.address}</p>
-                        )}
-                        {cliente?.cidade && (
-                          <p className="text-gray-400 text-sm">Cidade: {cliente.cidade}</p>
-                        )}
-                        <p className="text-gray-400 text-sm">Criado: {formatDateToBrazilian(budget.date)}</p>
-                        {budget.delivery_date && (
-                          <p className="text-gray-400 text-sm">Entrega: {formatDateToBrazilian(budget.delivery_date)}</p>
-                        )}
-                      </div>
-                      <div className="text-right">
-                        <p className="text-gray-400 text-sm">Total do Orçamento</p>
-                        <p className="text-2xl font-bold text-blue-400">{formatCurrency(budget.total)}</p>
-                      </div>
+      {/* Lista de Orçamentos Pendentes */}
+      <div className="grid grid-cols-1 gap-6">
+        {budgets.map((budget) => {
+          // Encontrar dados completos do cliente
+          const cliente = clientes.find(c => c.name === budget.client_name);
+          
+          return (
+            <Card key={budget.id} className="bg-crm-card border-crm-border">
+              <CardContent className="p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="text-xl font-semibold text-white">{budget.title}</h3>
+                      <Select
+                        value={budget.status}
+                        onValueChange={(value) => handleStatusChange(budget.id, value)}
+                        disabled={updateStatusMutation.isPending}
+                      >
+                        <SelectTrigger className={`w-36 ${getStatusColor(budget.status)} border-none`}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-crm-dark border-crm-border">
+                          <SelectItem value="Aguardando" className="text-white">Aguardando</SelectItem>
+                          <SelectItem value="Venda Gerada" className="text-white">Venda Gerada</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <PDFGenerator 
+                        budget={budget} 
+                        clientes={clientes}
+                        disabled={updateBudgetMutation.isPending || deleteBudgetMutation.isPending}
+                      />
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        onClick={() => handleEditBudget(budget)}
+                        className="text-gray-400 hover:text-blue-400"
+                        disabled={updateBudgetMutation.isPending}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        onClick={() => handleDeleteBudget(budget.id)}
+                        className="text-gray-400 hover:text-red-400"
+                        disabled={deleteBudgetMutation.isPending}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
-                    
-                    <div className="mt-6">
-                      <h4 className="text-white font-medium mb-3">Itens do Orçamento:</h4>
-                      <div className="space-y-2">
-                        {budget.orcamento_items?.map((item: any, index: number) => (
-                          <div key={index} className="flex justify-between text-gray-300">
-                            <span>({item.quantity}x) - {item.product_name}</span>
-                            <span>{formatCurrency(item.subtotal)}</span>
-                          </div>
-                        ))}
+                    <p className="text-gray-400">{budget.client_name}</p>
+                    {cliente?.address && (
+                      <p className="text-gray-400 text-sm">Endereço: {cliente.address}</p>
+                    )}
+                    {cliente?.cidade && (
+                      <p className="text-gray-400 text-sm">Cidade: {cliente.cidade}</p>
+                    )}
+                    <p className="text-gray-400 text-sm">Criado: {formatDateToBrazilian(budget.date)}</p>
+                    {budget.delivery_date && (
+                      <p className="text-gray-400 text-sm">Entrega: {formatDateToBrazilian(budget.delivery_date)}</p>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <p className="text-gray-400 text-sm">Total do Orçamento</p>
+                    <p className="text-2xl font-bold text-blue-400">{formatCurrency(budget.total)}</p>
+                  </div>
+                </div>
+                
+                <div className="mt-6">
+                  <h4 className="text-white font-medium mb-3">Itens do Orçamento:</h4>
+                  <div className="space-y-2">
+                    {budget.orcamento_items?.map((item: any, index: number) => (
+                      <div key={index} className="flex justify-between text-gray-300">
+                        <span>({item.quantity}x) - {item.product_name}</span>
+                        <span>{formatCurrency(item.subtotal)}</span>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="vendas-geradas">
-          {/* Vendas Geradas */}
-          <div className="grid grid-cols-1 gap-6">
-            {salesGenerated.map((budget) => {
-              const cliente = clientes.find(c => c.name === budget.client_name);
-              
-              return (
-                <Card key={budget.id} className="bg-crm-card border-crm-border border-purple-500/30">
-                  <CardContent className="p-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-xl font-semibold text-white">{budget.title}</h3>
-                          <div className={`px-3 py-1 rounded ${getStatusColor(budget.status)} text-sm font-medium`}>
-                            Venda Gerada
-                          </div>
-                          <PDFGenerator 
-                            budget={budget} 
-                            clientes={clientes}
-                            disabled={false}
-                          />
-                        </div>
-                        <p className="text-gray-400">{budget.client_name}</p>
-                        {cliente?.address && (
-                          <p className="text-gray-400 text-sm">Endereço: {cliente.address}</p>
-                        )}
-                        {cliente?.cidade && (
-                          <p className="text-gray-400 text-sm">Cidade: {cliente.cidade}</p>
-                        )}
-                        <p className="text-gray-400 text-sm">Criado: {formatDateToBrazilian(budget.date)}</p>
-                        {budget.delivery_date && (
-                          <p className="text-gray-400 text-sm">Entrega: {formatDateToBrazilian(budget.delivery_date)}</p>
-                        )}
-                      </div>
-                      <div className="text-right">
-                        <p className="text-gray-400 text-sm">Valor da Venda</p>
-                        <p className="text-2xl font-bold text-purple-400">{formatCurrency(budget.total)}</p>
-                        <p className="text-purple-400 text-sm mt-1">✓ Venda Confirmada</p>
-                      </div>
-                    </div>
-                    
-                    <div className="mt-6">
-                      <h4 className="text-white font-medium mb-3">Itens Vendidos:</h4>
-                      <div className="space-y-2">
-                        {budget.orcamento_items?.map((item: any, index: number) => (
-                          <div key={index} className="flex justify-between text-gray-300">
-                            <span>({item.quantity}x) - {item.product_name}</span>
-                            <span>{formatCurrency(item.subtotal)}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </TabsContent>
-      </Tabs>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
 
       <OrcamentoModal
         open={modalOpen}

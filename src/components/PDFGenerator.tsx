@@ -1,4 +1,3 @@
-
 import { FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import jsPDF from 'jspdf';
@@ -60,26 +59,53 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
     doc.setTextColor(0, 0, 0);
     doc.text('Orçamento', 20, 65);
     
+    // Find client data to get the city
+    const cliente = clientes.find(c => c.name === budget.client_name);
+    
     // Client info
     doc.setFontSize(12);
     doc.text(`Cliente: ${budget.client_name}`, 20, 80);
-    doc.text(`Data: ${new Date(budget.created_at).toLocaleDateString('pt-BR')}`, 20, 90);
     
-    if (budget.delivery_date) {
-      doc.text(`Data de Entrega: ${new Date(budget.delivery_date).toLocaleDateString('pt-BR')}`, 20, 100);
+    // Add city if available
+    if (cliente?.cidade) {
+      doc.text(`Cidade: ${cliente.cidade}`, 20, 90);
+      doc.text(`Data: ${new Date(budget.created_at).toLocaleDateString('pt-BR')}`, 20, 100);
+      
+      if (budget.delivery_date) {
+        doc.text(`Data de Entrega: ${new Date(budget.delivery_date).toLocaleDateString('pt-BR')}`, 20, 110);
+      }
+      
+      doc.text(`Status: ${budget.status}`, 20, 120);
+      
+      // Linha horizontal após dados do cliente
+      doc.setDrawColor(200, 200, 200);
+      doc.setLineWidth(0.5);
+      doc.line(20, 130, 190, 130);
+      
+      // Items
+      let yPosition = 140;
+      doc.text('Itens:', 20, yPosition);
+      yPosition += 10;
+    } else {
+      // Without city, keep original spacing
+      doc.text(`Data: ${new Date(budget.created_at).toLocaleDateString('pt-BR')}`, 20, 90);
+      
+      if (budget.delivery_date) {
+        doc.text(`Data de Entrega: ${new Date(budget.delivery_date).toLocaleDateString('pt-BR')}`, 20, 100);
+      }
+      
+      doc.text(`Status: ${budget.status}`, 20, 110);
+      
+      // Linha horizontal após dados do cliente
+      doc.setDrawColor(200, 200, 200);
+      doc.setLineWidth(0.5);
+      doc.line(20, 120, 190, 120);
+      
+      // Items
+      let yPosition = 130;
+      doc.text('Itens:', 20, yPosition);
+      yPosition += 10;
     }
-    
-    doc.text(`Status: ${budget.status}`, 20, 110);
-    
-    // Linha horizontal após dados do cliente
-    doc.setDrawColor(200, 200, 200);
-    doc.setLineWidth(0.5);
-    doc.line(20, 120, 190, 120);
-    
-    // Items
-    let yPosition = 130;
-    doc.text('Itens:', 20, yPosition);
-    yPosition += 10;
     
     let total = 0;
     
