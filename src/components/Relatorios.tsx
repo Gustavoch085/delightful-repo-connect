@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -44,6 +43,22 @@ export function Relatorios() {
       'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
     ];
     return months[month - 1];
+  };
+
+  // Função para formatar data corretamente sem perder dias
+  const formatDateDisplay = (dateString: string) => {
+    if (!dateString) return "";
+    
+    // Se a data já está no formato YYYY-MM-DD, criar a data corretamente
+    if (dateString.includes('-')) {
+      const [year, month, day] = dateString.split('-');
+      const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      return date.toLocaleDateString('pt-BR');
+    }
+    
+    // Se não, tentar parsejar normalmente
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR');
   };
 
   // Buscar relatório do mês anterior
@@ -464,7 +479,7 @@ export function Relatorios() {
                       <div>
                         <p className="text-white font-medium">{expense.title}</p>
                         <p className="text-gray-400 text-sm">
-                          {expense.category || 'Sem Cliente'} • {new Date(expense.date).toLocaleDateString('pt-BR')}
+                          {expense.category || 'Sem Cliente'} • {formatDateDisplay(expense.date)}
                         </p>
                       </div>
                       <div className="flex items-center gap-4">
@@ -531,7 +546,7 @@ export function Relatorios() {
                     <div>
                       <p className="text-white font-medium">{revenue.title}</p>
                       <p className="text-gray-400 text-sm">
-                        {revenue.client_name} • {new Date(revenue.date).toLocaleDateString('pt-BR')}
+                        {revenue.client_name} • {formatDateDisplay(revenue.date)}
                         {revenue.orcamento_id && <span className="ml-2 text-purple-400">(Venda Gerada)</span>}
                       </p>
                     </div>
