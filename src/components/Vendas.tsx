@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { PDFGenerator } from "./PDFGenerator";
 
 export function Vendas() {
   const [showVendasRealizadas, setShowVendasRealizadas] = useState(false);
@@ -325,6 +327,10 @@ export function Vendas() {
                       </Badge>
                     </div>
                     <div className="flex items-center gap-2">
+                      <PDFGenerator 
+                        budget={venda} 
+                        clientes={clientes}
+                      />
                       {!showVendasRealizadas && (
                         <Button
                           onClick={() => handleFinalizarVenda(venda.id)}
