@@ -66,43 +66,53 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
     doc.setFontSize(12);
     doc.text(`Cliente: ${budget.client_name}`, 20, 80);
     
+    // Declare yPosition outside the conditional blocks
+    let yPosition = 90;
+    
     // Add city if available
     if (cliente?.cidade) {
-      doc.text(`Cidade: ${cliente.cidade}`, 20, 90);
-      doc.text(`Data: ${new Date(budget.created_at).toLocaleDateString('pt-BR')}`, 20, 100);
+      doc.text(`Cidade: ${cliente.cidade}`, 20, yPosition);
+      yPosition += 10;
+      doc.text(`Data: ${new Date(budget.created_at).toLocaleDateString('pt-BR')}`, 20, yPosition);
+      yPosition += 10;
       
       if (budget.delivery_date) {
-        doc.text(`Data de Entrega: ${new Date(budget.delivery_date).toLocaleDateString('pt-BR')}`, 20, 110);
+        doc.text(`Data de Entrega: ${new Date(budget.delivery_date).toLocaleDateString('pt-BR')}`, 20, yPosition);
+        yPosition += 10;
       }
       
-      doc.text(`Status: ${budget.status}`, 20, 120);
+      doc.text(`Status: ${budget.status}`, 20, yPosition);
+      yPosition += 10;
       
       // Linha horizontal após dados do cliente
       doc.setDrawColor(200, 200, 200);
       doc.setLineWidth(0.5);
-      doc.line(20, 130, 190, 130);
+      doc.line(20, yPosition, 190, yPosition);
+      yPosition += 10;
       
       // Items
-      let yPosition = 140;
       doc.text('Itens:', 20, yPosition);
       yPosition += 10;
     } else {
       // Without city, keep original spacing
-      doc.text(`Data: ${new Date(budget.created_at).toLocaleDateString('pt-BR')}`, 20, 90);
+      doc.text(`Data: ${new Date(budget.created_at).toLocaleDateString('pt-BR')}`, 20, yPosition);
+      yPosition += 10;
       
       if (budget.delivery_date) {
-        doc.text(`Data de Entrega: ${new Date(budget.delivery_date).toLocaleDateString('pt-BR')}`, 20, 100);
+        doc.text(`Data de Entrega: ${new Date(budget.delivery_date).toLocaleDateString('pt-BR')}`, 20, yPosition);
+        yPosition += 10;
       }
       
-      doc.text(`Status: ${budget.status}`, 20, 110);
+      doc.text(`Status: ${budget.status}`, 20, yPosition);
+      yPosition += 10;
       
       // Linha horizontal após dados do cliente
       doc.setDrawColor(200, 200, 200);
       doc.setLineWidth(0.5);
-      doc.line(20, 120, 190, 120);
+      doc.line(20, yPosition, 190, yPosition);
+      yPosition += 10;
       
       // Items
-      let yPosition = 130;
       doc.text('Itens:', 20, yPosition);
       yPosition += 10;
     }
