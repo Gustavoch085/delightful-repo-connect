@@ -97,7 +97,7 @@ export function Vendas() {
 
   const formatDateToBrazilian = (isoDate: string) => {
     if (!isoDate) return '';
-    const date = new Date(isoDate + 'T12:00:00'); // Adicionar horário do meio-dia para evitar problemas de timezone
+    const date = new Date(isoDate + 'T12:00:00');
     return format(date, "dd/MM/yyyy", { locale: ptBR });
   };
 
@@ -109,12 +109,10 @@ export function Vendas() {
     finalizarVendaMutation.mutate(vendaId);
   };
 
-  // Filtrar vendas por cliente se selecionado
   const filteredVendas = selectedStatus === "all" 
     ? vendas 
     : vendas.filter(venda => venda.client_name === selectedStatus);
 
-  // Obter lista única de clientes das vendas
   const clientesComVendas = Array.from(new Set(
     vendas.map(venda => venda.client_name)
   )).sort();
