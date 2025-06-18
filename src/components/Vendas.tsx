@@ -182,7 +182,7 @@ export function Vendas() {
               <div>
                 <p className="text-gray-400 text-sm">Valor Total</p>
                 <p className="text-2xl font-bold text-green-400">
-                  {formatCurrency(filteredVendas.reduce((total, venda) => total + parseFloat(venda.total || '0'), 0))}
+                  {formatCurrency(filteredVendas.reduce((total, venda) => total + parseFloat(venda.total?.toString() || '0'), 0))}
                 </p>
               </div>
               <DollarSign className="h-8 w-8 text-green-400" />
