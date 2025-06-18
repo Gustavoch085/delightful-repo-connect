@@ -61,7 +61,7 @@ const USERS = {
       email: 'jenifer@fortal.com',
       name: 'Jenifer Leite',
       role: 'staff' as const,
-      permissions: ['dashboard', 'clientes', 'produtos', 'orcamentos', 'agenda']
+      permissions: ['dashboard', 'clientes', 'produtos', 'relatorios', 'orcamentos', 'agenda', 'logs']
     }
   },
   marcusvinicius: {
@@ -71,7 +71,7 @@ const USERS = {
       email: 'marcus@fortal.com',
       name: 'Marcus Vinícius',
       role: 'staff' as const,
-      permissions: ['dashboard', 'clientes', 'produtos', 'orcamentos', 'agenda']
+      permissions: ['dashboard', 'clientes', 'produtos', 'relatorios', 'orcamentos', 'agenda', 'logs']
     }
   }
 };
