@@ -25,19 +25,17 @@ export function FaturaModal({ open, onOpenChange, fatura, onSave }: FaturaModalP
 
   useEffect(() => {
     if (fatura) {
-      // Se tem fatura para editar, formatar a data para DD/MM/AAAA
-      const dateFormatted = fatura.date ? formatDateToDisplay(fatura.date) : "";
+      // Se tem fatura para editar, usar a data como está (já está no formato correto do banco)
       setFormData({
         title: fatura.title || "",
         client: fatura.client || "",
         value: fatura.value ? fatura.value.replace('+ R$ ', '').replace('.', '').replace(',', '.') : "",
-        date: dateFormatted,
+        date: formatDateToDisplay(fatura.date),
       });
     } else {
-      // Se é nova fatura, usar data atual formatada para o timezone do Brasil
+      // Se é nova fatura, usar data atual no timezone do Brasil
       const today = new Date();
-      // Ajustar para o timezone do Brasil (UTC-3)
-      const brasilDate = new Date(today.getTime() - (3 * 60 * 60 * 1000));
+      const brasilDate = new Date(today.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
       const todayFormatted = formatDateToDisplay(brasilDate);
       setFormData({
         title: "",
@@ -67,10 +65,9 @@ export function FaturaModal({ open, onOpenChange, fatura, onSave }: FaturaModalP
     
     let date: Date;
     if (typeof dateInput === 'string') {
-      // Se é string no formato YYYY-MM-DD, criar data no timezone do Brasil
+      // Se é string no formato YYYY-MM-DD, criar data corretamente
       if (dateInput.includes('-')) {
         const [year, month, day] = dateInput.split('-');
-        // Criar data sem problemas de timezone
         date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
       } else {
         date = new Date(dateInput);
@@ -88,16 +85,7 @@ export function FaturaModal({ open, onOpenChange, fatura, onSave }: FaturaModalP
   const formatDateToISO = (dateString: string) => {
     if (!dateString || dateString.length !== 10) return "";
     const [day, month, year] = dateString.split('/');
-    
-    // Criar data no timezone local do Brasil para evitar problemas
-    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-    
-    // Formatar para YYYY-MM-DD
-    const isoDay = date.getDate().toString().padStart(2, '0');
-    const isoMonth = (date.getMonth() + 1).toString().padStart(2, '0');
-    const isoYear = date.getFullYear();
-    
-    return `${isoYear}-${isoMonth}-${isoDay}`;
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
   };
 
   const handleDateChange = (value: string) => {
@@ -158,8 +146,7 @@ export function FaturaModal({ open, onOpenChange, fatura, onSave }: FaturaModalP
     // Reset form se não for edição
     if (!fatura) {
       const today = new Date();
-      // Ajustar para o timezone do Brasil (UTC-3)
-      const brasilDate = new Date(today.getTime() - (3 * 60 * 60 * 1000));
+      const brasilDate = new Date(today.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
       const todayFormatted = formatDateToDisplay(brasilDate);
       setFormData({ title: "", client: "", value: "", date: todayFormatted });
     }

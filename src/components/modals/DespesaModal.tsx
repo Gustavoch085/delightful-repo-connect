@@ -25,19 +25,17 @@ export function DespesaModal({ open, onOpenChange, despesa, onSave }: DespesaMod
 
   useEffect(() => {
     if (despesa) {
-      // Se tem despesa para editar, formatar a data para DD/MM/AAAA
-      const dateFormatted = despesa.date ? formatDateToDisplay(despesa.date) : "";
+      // Se tem despesa para editar, usar a data como está (já está no formato correto do banco)
       setFormData({
         title: despesa.title || "",
         client: despesa.client || "",
         value: despesa.value ? despesa.value.replace('- R$ ', '').replace('.', '').replace(',', '.') : "",
-        date: dateFormatted,
+        date: formatDateToDisplay(despesa.date),
       });
     } else {
-      // Se é nova despesa, usar data atual formatada para o timezone do Brasil
+      // Se é nova despesa, usar data atual no timezone do Brasil
       const today = new Date();
-      // Ajustar para o timezone do Brasil (UTC-3)
-      const brasilDate = new Date(today.getTime() - (3 * 60 * 60 * 1000));
+      const brasilDate = new Date(today.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
       const todayFormatted = formatDateToDisplay(brasilDate);
       setFormData({
         title: "",
@@ -67,10 +65,9 @@ export function DespesaModal({ open, onOpenChange, despesa, onSave }: DespesaMod
     
     let date: Date;
     if (typeof dateInput === 'string') {
-      // Se é string no formato YYYY-MM-DD, criar data no timezone do Brasil
+      // Se é string no formato YYYY-MM-DD, criar data corretamente
       if (dateInput.includes('-')) {
         const [year, month, day] = dateInput.split('-');
-        // Criar data sem problemas de timezone
         date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
       } else {
         date = new Date(dateInput);
@@ -88,16 +85,7 @@ export function DespesaModal({ open, onOpenChange, despesa, onSave }: DespesaMod
   const formatDateToISO = (dateString: string) => {
     if (!dateString || dateString.length !== 10) return "";
     const [day, month, year] = dateString.split('/');
-    
-    // Criar data no timezone local do Brasil para evitar problemas
-    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-    
-    // Formatar para YYYY-MM-DD
-    const isoDay = date.getDate().toString().padStart(2, '0');
-    const isoMonth = (date.getMonth() + 1).toString().padStart(2, '0');
-    const isoYear = date.getFullYear();
-    
-    return `${isoYear}-${isoMonth}-${isoDay}`;
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
   };
 
   const handleDateChange = (value: string) => {
@@ -158,8 +146,7 @@ export function DespesaModal({ open, onOpenChange, despesa, onSave }: DespesaMod
     // Reset form se não for edição
     if (!despesa) {
       const today = new Date();
-      // Ajustar para o timezone do Brasil (UTC-3)
-      const brasilDate = new Date(today.getTime() - (3 * 60 * 60 * 1000));
+      const brasilDate = new Date(today.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
       const todayFormatted = formatDateToDisplay(brasilDate);
       setFormData({ title: "", client: "", value: "", date: todayFormatted });
     }
