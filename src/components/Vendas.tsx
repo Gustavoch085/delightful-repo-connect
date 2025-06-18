@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ShoppingCart, User, Calendar, DollarSign, Package, Check, RefreshCw } from "lucide-react";
+import { ShoppingCart, User, Calendar, DollarSign, Package, Check, RefreshCw, TrendingUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -12,6 +12,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 export function Vendas() {
+  const [showHistorico, setShowHistorico] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -37,7 +38,8 @@ export function Vendas() {
       
       if (error) throw error;
       return data || [];
-    }
+    },
+    enabled: showHistorico
   });
 
   // Buscar clientes para filtros
@@ -51,7 +53,8 @@ export function Vendas() {
       
       if (error) throw error;
       return data;
-    }
+    },
+    enabled: showHistorico
   });
 
   // Marcar venda como finalizada
@@ -117,6 +120,46 @@ export function Vendas() {
     vendas.map(venda => venda.client_name)
   )).sort();
 
+  // Tela inicial com botão principal
+  if (!showHistorico) {
+    return (
+      <div className="p-6 bg-crm-dark min-h-screen">
+        <div className="flex justify-center items-center min-h-[80vh]">
+          <div className="text-center space-y-8">
+            <div className="flex items-center justify-center gap-3 mb-8">
+              <ShoppingCart className="h-12 w-12 text-green-400" />
+              <h1 className="text-4xl font-bold text-white">Módulo de Vendas</h1>
+            </div>
+            
+            <Card className="bg-crm-card border-crm-border p-8 max-w-md mx-auto">
+              <CardContent className="text-center space-y-6">
+                <TrendingUp className="h-16 w-16 text-green-400 mx-auto" />
+                <div>
+                  <h2 className="text-xl font-semibold text-white mb-2">
+                    Histórico de Vendas
+                  </h2>
+                  <p className="text-gray-400 mb-6">
+                    Visualize todas as vendas realizadas e gerencie o status dos serviços
+                  </p>
+                </div>
+                
+                <Button
+                  onClick={() => setShowHistorico(true)}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6"
+                  size="lg"
+                >
+                  <ShoppingCart className="h-5 w-5 mr-2" />
+                  Vendas Realizadas
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Tela do histórico de vendas
   if (isLoading) {
     return (
       <div className="p-6 bg-crm-dark min-h-screen flex items-center justify-center">
@@ -129,6 +172,13 @@ export function Vendas() {
     <div className="p-6 bg-crm-dark min-h-screen">
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center gap-3">
+          <Button
+            onClick={() => setShowHistorico(false)}
+            variant="outline"
+            className="border-gray-600 text-gray-300 hover:bg-gray-700"
+          >
+            ← Voltar
+          </Button>
           <ShoppingCart className="h-8 w-8 text-green-400" />
           <h1 className="text-3xl font-bold text-white">Vendas Realizadas</h1>
         </div>
