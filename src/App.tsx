@@ -11,7 +11,6 @@ import { Produtos } from "@/components/Produtos";
 import { Relatorios } from "@/components/Relatorios";
 import { Orcamentos } from "@/components/Orcamentos";
 import { Vendas } from "@/components/Vendas";
-import { Agenda } from "@/components/Agenda";
 import { Logs } from "@/components/Logs";
 import { LoginPanel } from "@/components/LoginPanel";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -79,13 +78,6 @@ const App = () => (
                   <ProtectedRoute>
                     <Layout>
                       <Vendas />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/agenda" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <Agenda />
                     </Layout>
                   </ProtectedRoute>
                 } />

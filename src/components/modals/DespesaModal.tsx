@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -36,7 +35,7 @@ export function DespesaModal({ open, onOpenChange, despesa, onSave }: DespesaMod
     } else {
       // Se é nova despesa, usar data atual formatada
       const today = new Date();
-      const todayFormatted = formatDateToDisplay(today.toISOString().split('T')[0]);
+      const todayFormatted = formatDateToDisplay(today);
       setFormData({
         title: "",
         client: "",
@@ -60,9 +59,22 @@ export function DespesaModal({ open, onOpenChange, despesa, onSave }: DespesaMod
     }
   });
 
-  const formatDateToDisplay = (dateString: string) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
+  const formatDateToDisplay = (dateInput: string | Date) => {
+    if (!dateInput) return "";
+    
+    let date: Date;
+    if (typeof dateInput === 'string') {
+      // Se é string no formato YYYY-MM-DD, criar data com horário do meio-dia para evitar problemas de timezone
+      if (dateInput.includes('-')) {
+        const [year, month, day] = dateInput.split('-');
+        date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), 12, 0, 0);
+      } else {
+        date = new Date(dateInput);
+      }
+    } else {
+      date = dateInput;
+    }
+    
     const day = date.getDate().toString().padStart(2, '0');
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const year = date.getFullYear();
@@ -72,7 +84,9 @@ export function DespesaModal({ open, onOpenChange, despesa, onSave }: DespesaMod
   const formatDateToISO = (dateString: string) => {
     if (!dateString || dateString.length !== 10) return "";
     const [day, month, year] = dateString.split('/');
-    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    // Criar data com horário do meio-dia para evitar problemas de timezone
+    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), 12, 0, 0);
+    return date.toISOString().split('T')[0];
   };
 
   const handleDateChange = (value: string) => {
@@ -133,7 +147,7 @@ export function DespesaModal({ open, onOpenChange, despesa, onSave }: DespesaMod
     // Reset form se não for edição
     if (!despesa) {
       const today = new Date();
-      const todayFormatted = formatDateToDisplay(today.toISOString().split('T')[0]);
+      const todayFormatted = formatDateToDisplay(today);
       setFormData({ title: "", client: "", value: "", date: todayFormatted });
     }
   };
