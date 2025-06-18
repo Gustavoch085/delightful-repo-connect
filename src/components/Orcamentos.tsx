@@ -100,13 +100,13 @@ export function Orcamentos() {
     retry: 3,
   });
 
-  // Fetch clients for the modal
+  // Fetch clients for the modal - buscar todos os campos necessários
   const { data: clientes = [] } = useQuery({
     queryKey: ['clientes'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('clientes')
-        .select('id, name')
+        .select('id, name, address, cidade, phone, email')
         .order('name');
       
       if (error) throw error;
