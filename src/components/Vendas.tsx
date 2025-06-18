@@ -1,10 +1,10 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ShoppingCart, User, Calendar, DollarSign, Package, Check, RefreshCw } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { ShoppingCart, User, Calendar, DollarSign, Package, Check, RefreshCw, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -115,6 +115,44 @@ export function Vendas() {
     }
   });
 
+  // Excluir venda realizada
+  const excluirVendaMutation = useMutation({
+    mutationFn: async (vendaId: string) => {
+      // Primeiro, excluir os itens do orçamento
+      const { error: itemsError } = await supabase
+        .from('orcamento_items')
+        .delete()
+        .eq('orcamento_id', vendaId);
+      
+      if (itemsError) throw itemsError;
+
+      // Depois, excluir o orçamento
+      const { error: orcamentoError } = await supabase
+        .from('orcamentos')
+        .delete()
+        .eq('id', vendaId);
+      
+      if (orcamentoError) throw orcamentoError;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['vendas-realizadas'] });
+      refetchRealizadas();
+      
+      toast({
+        title: "Venda excluída",
+        description: "A venda foi excluída com sucesso.",
+      });
+    },
+    onError: (error) => {
+      console.error('Erro ao excluir venda:', error);
+      toast({
+        title: "Erro ao excluir venda",
+        description: "Não foi possível excluir a venda. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  });
+
   const formatCurrency = (value: number | string) => {
     const numericValue = typeof value === 'number' ? value : parseFloat(value?.toString() || '0');
     return new Intl.NumberFormat('pt-BR', {
@@ -135,6 +173,10 @@ export function Vendas() {
 
   const handleFinalizarVenda = (vendaId: string) => {
     finalizarVendaMutation.mutate(vendaId);
+  };
+
+  const handleExcluirVenda = (vendaId: string) => {
+    excluirVendaMutation.mutate(vendaId);
   };
 
   // Determinar quais dados usar baseado na tela atual
@@ -282,16 +324,51 @@ export function Vendas() {
                         {showVendasRealizadas ? "Serviço Finalizado" : "Venda Confirmada"}
                       </Badge>
                     </div>
-                    {!showVendasRealizadas && (
-                      <Button
-                        onClick={() => handleFinalizarVenda(venda.id)}
-                        disabled={finalizarVendaMutation.isPending}
-                        className="bg-blue-600 hover:bg-blue-700"
-                      >
-                        <Check className="h-4 w-4 mr-2" />
-                        Finalizar Serviço
-                      </Button>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {!showVendasRealizadas && (
+                        <Button
+                          onClick={() => handleFinalizarVenda(venda.id)}
+                          disabled={finalizarVendaMutation.isPending}
+                          className="bg-blue-600 hover:bg-blue-700"
+                        >
+                          <Check className="h-4 w-4 mr-2" />
+                          Finalizar Serviço
+                        </Button>
+                      )}
+                      {showVendasRealizadas && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              className="bg-red-600 hover:bg-red-700"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent className="bg-crm-dark border-crm-border">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle className="text-white">Excluir Venda</AlertDialogTitle>
+                              <AlertDialogDescription className="text-gray-400">
+                                Tem certeza que deseja excluir esta venda? Esta ação não pode ser desfeita.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel className="bg-gray-600 border-gray-600 text-white hover:bg-gray-700">
+                                Cancelar
+                              </AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleExcluirVenda(venda.id)}
+                                disabled={excluirVendaMutation.isPending}
+                                className="bg-red-600 hover:bg-red-700"
+                              >
+                                Excluir
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
+                    </div>
                   </div>
                 </CardHeader>
                 
