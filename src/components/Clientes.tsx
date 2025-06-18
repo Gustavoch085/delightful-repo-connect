@@ -50,6 +50,7 @@ export function Clientes() {
         name: clientData.name,
         phone: clientData.phone,
         address: clientData.address,
+        cidade: clientData.cidade,
         email: clientData.email || null
       };
 
@@ -77,6 +78,7 @@ export function Clientes() {
         name: clientData.name,
         phone: clientData.phone,
         address: clientData.address,
+        cidade: clientData.cidade,
         email: clientData.email || null
       };
 
@@ -137,7 +139,8 @@ export function Clientes() {
   const filteredClients = clients.filter(client =>
     client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     client.phone.includes(searchTerm) ||
-    client.address.toLowerCase().includes(searchTerm.toLowerCase())
+    client.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (client.cidade && client.cidade.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const handleSaveClient = async (clientData: any) => {
@@ -244,7 +247,10 @@ export function Clientes() {
                   </div>
                 </div>
                 
-                <p className="text-gray-300 text-sm mb-4">{client.address}</p>
+                <p className="text-gray-300 text-sm mb-2">{client.address}</p>
+                {client.cidade && (
+                  <p className="text-gray-300 text-sm mb-4">{client.cidade}</p>
+                )}
                 
                 <div className="flex justify-between items-center pt-4 border-t border-crm-border">
                   <div>

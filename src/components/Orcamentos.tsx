@@ -515,76 +515,87 @@ export function Orcamentos() {
 
       {/* Budgets */}
       <div className="grid grid-cols-1 gap-6">
-        {budgets.map((budget) => (
-          <Card key={budget.id} className="bg-crm-card border-crm-border">
-            <CardContent className="p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-xl font-semibold text-white">{budget.title}</h3>
-                    <Select
-                      value={budget.status}
-                      onValueChange={(value) => handleStatusChange(budget.id, value)}
-                      disabled={updateStatusMutation.isPending}
-                    >
-                      <SelectTrigger className={`w-32 ${getStatusColor(budget.status)} border-none`}>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-crm-dark border-crm-border">
-                        <SelectItem value="Aguardando" className="text-white">Aguardando</SelectItem>
-                        <SelectItem value="Finalizado" className="text-white">Finalizado</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <PDFGenerator 
-                      budget={budget} 
-                      clientes={clientes}
-                      disabled={updateBudgetMutation.isPending || deleteBudgetMutation.isPending}
-                    />
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      onClick={() => handleEditBudget(budget)}
-                      className="text-gray-400 hover:text-blue-400"
-                      disabled={updateBudgetMutation.isPending}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      onClick={() => handleDeleteBudget(budget.id)}
-                      className="text-gray-400 hover:text-red-400"
-                      disabled={deleteBudgetMutation.isPending}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <p className="text-gray-400">{budget.client_name}</p>
-                  <p className="text-gray-400 text-sm">Criado: {formatDateToBrazilian(budget.date)}</p>
-                  {budget.delivery_date && (
-                    <p className="text-gray-400 text-sm">Entrega: {formatDateToBrazilian(budget.delivery_date)}</p>
-                  )}
-                </div>
-                <div className="text-right">
-                  <p className="text-gray-400 text-sm">Total do Orçamento</p>
-                  <p className="text-2xl font-bold text-blue-400">{formatCurrency(budget.total)}</p>
-                </div>
-              </div>
-              
-              <div className="mt-6">
-                <h4 className="text-white font-medium mb-3">Itens do Orçamento:</h4>
-                <div className="space-y-2">
-                  {budget.orcamento_items?.map((item: any, index: number) => (
-                    <div key={index} className="flex justify-between text-gray-300">
-                      <span>({item.quantity}x) - {item.product_name}</span>
-                      <span>{formatCurrency(item.subtotal)}</span>
+        {budgets.map((budget) => {
+          // Encontrar dados completos do cliente
+          const cliente = clientes.find(c => c.name === budget.client_name);
+          
+          return (
+            <Card key={budget.id} className="bg-crm-card border-crm-border">
+              <CardContent className="p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="text-xl font-semibold text-white">{budget.title}</h3>
+                      <Select
+                        value={budget.status}
+                        onValueChange={(value) => handleStatusChange(budget.id, value)}
+                        disabled={updateStatusMutation.isPending}
+                      >
+                        <SelectTrigger className={`w-32 ${getStatusColor(budget.status)} border-none`}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-crm-dark border-crm-border">
+                          <SelectItem value="Aguardando" className="text-white">Aguardando</SelectItem>
+                          <SelectItem value="Finalizado" className="text-white">Finalizado</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <PDFGenerator 
+                        budget={budget} 
+                        clientes={clientes}
+                        disabled={updateBudgetMutation.isPending || deleteBudgetMutation.isPending}
+                      />
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        onClick={() => handleEditBudget(budget)}
+                        className="text-gray-400 hover:text-blue-400"
+                        disabled={updateBudgetMutation.isPending}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        onClick={() => handleDeleteBudget(budget.id)}
+                        className="text-gray-400 hover:text-red-400"
+                        disabled={deleteBudgetMutation.isPending}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
-                  ))}
+                    <p className="text-gray-400">{budget.client_name}</p>
+                    {cliente?.address && (
+                      <p className="text-gray-400 text-sm">Endereço: {cliente.address}</p>
+                    )}
+                    {cliente?.cidade && (
+                      <p className="text-gray-400 text-sm">Cidade: {cliente.cidade}</p>
+                    )}
+                    <p className="text-gray-400 text-sm">Criado: {formatDateToBrazilian(budget.date)}</p>
+                    {budget.delivery_date && (
+                      <p className="text-gray-400 text-sm">Entrega: {formatDateToBrazilian(budget.delivery_date)}</p>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <p className="text-gray-400 text-sm">Total do Orçamento</p>
+                    <p className="text-2xl font-bold text-blue-400">{formatCurrency(budget.total)}</p>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                
+                <div className="mt-6">
+                  <h4 className="text-white font-medium mb-3">Itens do Orçamento:</h4>
+                  <div className="space-y-2">
+                    {budget.orcamento_items?.map((item: any, index: number) => (
+                      <div key={index} className="flex justify-between text-gray-300">
+                        <span>({item.quantity}x) - {item.product_name}</span>
+                        <span>{formatCurrency(item.subtotal)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       <OrcamentoModal

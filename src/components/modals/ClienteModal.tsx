@@ -17,6 +17,7 @@ export function ClienteModal({ open, onOpenChange, cliente, onSave }: ClienteMod
     name: "",
     phone: "",
     address: "",
+    cidade: "",
     email: "",
   });
 
@@ -26,6 +27,7 @@ export function ClienteModal({ open, onOpenChange, cliente, onSave }: ClienteMod
         name: cliente.name || "",
         phone: cliente.phone || "",
         address: cliente.address || "",
+        cidade: cliente.cidade || "",
         email: cliente.email || "",
       });
     } else {
@@ -33,6 +35,7 @@ export function ClienteModal({ open, onOpenChange, cliente, onSave }: ClienteMod
         name: "",
         phone: "",
         address: "",
+        cidade: "",
         email: "",
       });
     }
@@ -77,6 +80,16 @@ export function ClienteModal({ open, onOpenChange, cliente, onSave }: ClienteMod
               id="address"
               value={formData.address}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              className="bg-crm-dark border-crm-border text-white"
+              required
+            />
+          </div>
+          <div>
+            <Label htmlFor="cidade">Cidade *</Label>
+            <Input
+              id="cidade"
+              value={formData.cidade}
+              onChange={(e) => setFormData({ ...formData, cidade: e.target.value })}
               className="bg-crm-dark border-crm-border text-white"
               required
             />

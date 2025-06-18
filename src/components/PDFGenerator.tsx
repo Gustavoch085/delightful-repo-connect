@@ -1,4 +1,3 @@
-
 import { FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import jsPDF from 'jspdf';
@@ -42,7 +41,7 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
     yPosition += 10;
     doc.text(`Telefone: ${cliente?.phone || 'Não informado'}`, 20, yPosition);
     yPosition += 10;
-    doc.text(`Cidade: ${cliente?.address ? cliente.address.split(',').pop()?.trim() : 'Não informado'}`, 20, yPosition);
+    doc.text(`Cidade: ${cliente?.cidade || 'Não informado'}`, 20, yPosition);
     
     // Linha separadora
     yPosition += 15;
