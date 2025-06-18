@@ -1,8 +1,10 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TrendingUp, TrendingDown, DollarSign, Edit, Trash2, Plus } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { TrendingUp, TrendingDown, DollarSign, Edit, Trash2, Plus, User } from "lucide-react";
 import { DespesaModal } from "./modals/DespesaModal";
 import { FaturaModal } from "./modals/FaturaModal";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +15,7 @@ export function Relatorios() {
   const [faturaModalOpen, setFaturaModalOpen] = useState(false);
   const [editingDespesa, setEditingDespesa] = useState(null);
   const [editingFatura, setEditingFatura] = useState(null);
+  const [selectedClient, setSelectedClient] = useState<string>("all");
 
   // Pega o mês/ano atual para filtrar
   const currentDate = new Date();
@@ -47,9 +50,9 @@ export function Relatorios() {
     }
   });
 
-  // Buscar orçamentos finalizados e converter para faturas
+  // Buscar orçamentos com status "Venda Gerada" para converter para faturas
   const { data: budgets = [], refetch: refetchBudgets } = useQuery({
-    queryKey: ['orcamentos-finalizados'],
+    queryKey: ['orcamentos-vendas'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('orcamentos')
@@ -63,16 +66,16 @@ export function Relatorios() {
             subtotal
           )
         `)
-        .eq('status', 'Finalizado');
+        .eq('status', 'Venda Gerada');
       
       if (error) throw error;
       return data || [];
     }
   });
 
-  // Converter orçamentos finalizados em faturas automaticamente
+  // Converter orçamentos com "Venda Gerada" em faturas automaticamente
   useEffect(() => {
-    const convertFinishedBudgetsToInvoices = async () => {
+    const convertSalesToInvoices = async () => {
       if (budgets.length > 0) {
         for (const budget of budgets) {
           // Verificar se já existe uma fatura para este orçamento
@@ -92,11 +95,11 @@ export function Relatorios() {
                 value: budget.total,
                 date: budget.date,
                 orcamento_id: budget.id,
-                status: 'Pendente'
+                status: 'Pago'
               });
 
             if (error) {
-              console.error('Erro ao converter orçamento para fatura:', error);
+              console.error('Erro ao converter venda para fatura:', error);
             }
           }
         }
@@ -105,7 +108,7 @@ export function Relatorios() {
       }
     };
 
-    convertFinishedBudgetsToInvoices();
+    convertSalesToInvoices();
   }, [budgets, refetchRevenues]);
 
   const formatCurrency = (value: number) => {
@@ -140,6 +143,16 @@ export function Relatorios() {
     groups[clientName].push(expense);
     return groups;
   }, {} as Record<string, any[]>);
+
+  // Filtrar despesas por cliente selecionado
+  const filteredExpenses = selectedClient === "all" 
+    ? expenses 
+    : expenses.filter(expense => (expense.category || 'Sem Cliente') === selectedClient);
+
+  // Obter lista única de clientes das despesas
+  const clientsFromExpenses = Array.from(new Set(
+    expenses.map(expense => expense.category || 'Sem Cliente')
+  )).sort();
 
   const totalExpenses = calculateTotal(expenses, true); // Filtra pelo mês atual
   const totalRevenues = calculateTotal(revenues, true); // Filtra pelo mês atual
@@ -303,7 +316,25 @@ export function Relatorios() {
             
             <TabsContent value="expenses" className="mt-6">
               <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-semibold text-white">Despesas por Cliente</h3>
+                <div className="flex items-center gap-4">
+                  <h3 className="text-xl font-semibold text-white">Despesas</h3>
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-gray-400" />
+                    <Select value={selectedClient} onValueChange={setSelectedClient}>
+                      <SelectTrigger className="w-48 bg-crm-dark border-crm-border text-white">
+                        <SelectValue placeholder="Selecionar cliente" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-crm-dark border-crm-border">
+                        <SelectItem value="all" className="text-white">Todos os Clientes</SelectItem>
+                        {clientsFromExpenses.map((clientName) => (
+                          <SelectItem key={clientName} value={clientName} className="text-white">
+                            {clientName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
                 <Button 
                   onClick={() => {
                     setEditingDespesa(null);
@@ -316,69 +347,55 @@ export function Relatorios() {
                 </Button>
               </div>
 
-              {Object.keys(expensesByClient).length > 0 ? (
-                <Tabs defaultValue={Object.keys(expensesByClient)[0]} className="w-full">
-                  <TabsList className="grid w-full grid-cols-auto bg-crm-dark mb-6" style={{ gridTemplateColumns: `repeat(${Math.min(Object.keys(expensesByClient).length, 4)}, 1fr)` }}>
-                    {Object.keys(expensesByClient).slice(0, 4).map((clientName) => (
-                      <TabsTrigger key={clientName} value={clientName} className="text-gray-300 data-[state=active]:text-white text-xs">
-                        {clientName.length > 12 ? `${clientName.substring(0, 12)}...` : clientName}
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
-
-                  {Object.entries(expensesByClient).map(([clientName, clientExpenses]) => (
-                    <TabsContent key={clientName} value={clientName} className="mt-6">
-                      <div className="mb-4">
-                        <h4 className="text-lg font-medium text-white mb-2">{clientName}</h4>
-                        <p className="text-sm text-gray-400">
-                          Total: {formatCurrency(clientExpenses.reduce((sum, exp) => sum + parseFloat(exp.value?.toString() || '0'), 0))}
+              {filteredExpenses.length > 0 ? (
+                <div className="space-y-4">
+                  {filteredExpenses.map((expense) => (
+                    <div key={expense.id} className="flex justify-between items-center p-4 rounded-lg border border-crm-border">
+                      <div>
+                        <p className="text-white font-medium">{expense.title}</p>
+                        <p className="text-gray-400 text-sm">
+                          {expense.category || 'Sem Cliente'} • {new Date(expense.date).toLocaleDateString('pt-BR')}
                         </p>
                       </div>
-                      
-                      <div className="space-y-4">
-                        {clientExpenses.map((expense) => (
-                          <div key={expense.id} className="flex justify-between items-center p-4 rounded-lg border border-crm-border">
-                            <div>
-                              <p className="text-white font-medium">{expense.title}</p>
-                              <p className="text-gray-400 text-sm">{new Date(expense.date).toLocaleDateString('pt-BR')}</p>
-                            </div>
-                            <div className="flex items-center gap-4">
-                              <p className="text-red-400 font-semibold">- {formatCurrency(parseFloat(expense.value?.toString() || '0'))}</p>
-                              <div className="flex gap-2">
-                                <Button 
-                                  size="sm" 
-                                  variant="ghost" 
-                                  onClick={() => {
-                                    setEditingDespesa({
-                                      ...expense,
-                                      client: expense.category,
-                                      value: `- R$ ${parseFloat(expense.value?.toString() || '0').toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                                    });
-                                    setDespesaModalOpen(true);
-                                  }}
-                                  className="text-gray-400 hover:text-white"
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button 
-                                  size="sm" 
-                                  variant="ghost" 
-                                  onClick={() => handleDeleteExpense(expense.id)}
-                                  className="text-gray-400 hover:text-red-400"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
+                      <div className="flex items-center gap-4">
+                        <p className="text-red-400 font-semibold">- {formatCurrency(parseFloat(expense.value?.toString() || '0'))}</p>
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            onClick={() => {
+                              setEditingDespesa({
+                                ...expense,
+                                client: expense.category,
+                                value: `- R$ ${parseFloat(expense.value?.toString() || '0').toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                              });
+                              setDespesaModalOpen(true);
+                            }}
+                            className="text-gray-400 hover:text-white"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            onClick={() => handleDeleteExpense(expense.id)}
+                            className="text-gray-400 hover:text-red-400"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
-                    </TabsContent>
+                    </div>
                   ))}
-                </Tabs>
+                </div>
               ) : (
                 <div className="text-center py-8">
-                  <p className="text-gray-400">Nenhuma despesa registrada ainda.</p>
+                  <p className="text-gray-400">
+                    {selectedClient === "all" 
+                      ? "Nenhuma despesa registrada ainda." 
+                      : `Nenhuma despesa encontrada para ${selectedClient}.`
+                    }
+                  </p>
                 </div>
               )}
             </TabsContent>
@@ -405,7 +422,7 @@ export function Relatorios() {
                       <p className="text-white font-medium">{revenue.title}</p>
                       <p className="text-gray-400 text-sm">
                         {revenue.client_name} • {new Date(revenue.date).toLocaleDateString('pt-BR')}
-                        {revenue.orcamento_id && <span className="ml-2 text-blue-400">(Orçamento Finalizado)</span>}
+                        {revenue.orcamento_id && <span className="ml-2 text-purple-400">(Venda Gerada)</span>}
                       </p>
                     </div>
                     <div className="flex items-center gap-4">
