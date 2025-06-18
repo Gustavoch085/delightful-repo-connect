@@ -1,6 +1,7 @@
 
 import { FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import jsPDF from 'jspdf';
 
 interface PDFGeneratorProps {
   budget: any;
@@ -18,53 +19,101 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
       return total + (item.quantity * parseFloat(item.price));
     }, 0) || 0;
 
-    // Criar conteúdo do PDF
-    const pdfContent = `
-      ORÇAMENTO - FORTAL CRM
-      
-      ======================================
-      DADOS DO CLIENTE
-      ======================================
-      Nome: ${budget.client_name}
-      Endereço: ${cliente?.address || 'Não informado'}
-      Telefone: ${cliente?.phone || 'Não informado'}
-      Cidade: ${cliente?.address ? cliente.address.split(',').pop()?.trim() : 'Não informado'}
-      
-      ======================================
-      PRODUTOS DO ORÇAMENTO
-      ======================================
-      ${budget.orcamento_items?.map((item: any, index: number) => 
-        `${index + 1}. ${item.product_name}
-           Quantidade: ${item.quantity}
-           Preço unitário: R$ ${parseFloat(item.price).toFixed(2).replace('.', ',')}
-           Subtotal: R$ ${(item.quantity * parseFloat(item.price)).toFixed(2).replace('.', ',')}
-        `
-      ).join('\n') || 'Nenhum produto adicionado'}
-      
-      ======================================
-      RESUMO FINANCEIRO
-      ======================================
-      Total Geral: R$ ${totalProdutos.toFixed(2).replace('.', ',')}
-      
-      ======================================
-      Data de criação: ${new Date(budget.created_at).toLocaleDateString('pt-BR')}
-      ${budget.delivery_date ? `Data de entrega: ${new Date(budget.delivery_date).toLocaleDateString('pt-BR')}` : ''}
-      Status: ${budget.status}
-      
-      ---
-      Gerado pelo Sistema Fortal CRM
-    `;
-
-    // Criar arquivo para download
-    const blob = new Blob([pdfContent], { type: 'text/plain;charset=utf-8' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `orcamento_${budget.client_name.replace(/\s+/g, '_')}_${new Date().getTime()}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
+    // Criar novo documento PDF
+    const doc = new jsPDF();
+    
+    // Configurar fonte
+    doc.setFontSize(20);
+    doc.text('ORÇAMENTO - FORTAL CRM', 20, 30);
+    
+    // Linha separadora
+    doc.setLineWidth(0.5);
+    doc.line(20, 35, 190, 35);
+    
+    // Dados do cliente
+    doc.setFontSize(14);
+    doc.text('DADOS DO CLIENTE', 20, 50);
+    
+    doc.setFontSize(11);
+    let yPosition = 60;
+    doc.text(`Nome: ${budget.client_name}`, 20, yPosition);
+    yPosition += 10;
+    doc.text(`Endereço: ${cliente?.address || 'Não informado'}`, 20, yPosition);
+    yPosition += 10;
+    doc.text(`Telefone: ${cliente?.phone || 'Não informado'}`, 20, yPosition);
+    yPosition += 10;
+    doc.text(`Cidade: ${cliente?.address ? cliente.address.split(',').pop()?.trim() : 'Não informado'}`, 20, yPosition);
+    
+    // Linha separadora
+    yPosition += 15;
+    doc.line(20, yPosition, 190, yPosition);
+    
+    // Produtos do orçamento
+    yPosition += 10;
+    doc.setFontSize(14);
+    doc.text('PRODUTOS DO ORÇAMENTO', 20, yPosition);
+    
+    doc.setFontSize(11);
+    yPosition += 15;
+    
+    if (budget.orcamento_items && budget.orcamento_items.length > 0) {
+      budget.orcamento_items.forEach((item: any, index: number) => {
+        const subtotal = item.quantity * parseFloat(item.price);
+        doc.text(`${index + 1}. ${item.product_name}`, 20, yPosition);
+        yPosition += 8;
+        doc.text(`   Quantidade: ${item.quantity}`, 20, yPosition);
+        yPosition += 8;
+        doc.text(`   Preço unitário: R$ ${parseFloat(item.price).toFixed(2).replace('.', ',')}`, 20, yPosition);
+        yPosition += 8;
+        doc.text(`   Subtotal: R$ ${subtotal.toFixed(2).replace('.', ',')}`, 20, yPosition);
+        yPosition += 12;
+        
+        // Verificar se precisa de nova página
+        if (yPosition > 250) {
+          doc.addPage();
+          yPosition = 30;
+        }
+      });
+    } else {
+      doc.text('Nenhum produto adicionado', 20, yPosition);
+      yPosition += 15;
+    }
+    
+    // Linha separadora
+    doc.line(20, yPosition, 190, yPosition);
+    
+    // Total
+    yPosition += 10;
+    doc.setFontSize(14);
+    doc.text('RESUMO FINANCEIRO', 20, yPosition);
+    
+    yPosition += 15;
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.text(`Total Geral: R$ ${totalProdutos.toFixed(2).replace('.', ',')}`, 20, yPosition);
+    
+    // Informações adicionais
+    yPosition += 20;
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(10);
+    doc.text(`Data de criação: ${new Date(budget.created_at).toLocaleDateString('pt-BR')}`, 20, yPosition);
+    
+    if (budget.delivery_date) {
+      yPosition += 8;
+      doc.text(`Data de entrega: ${new Date(budget.delivery_date).toLocaleDateString('pt-BR')}`, 20, yPosition);
+    }
+    
+    yPosition += 8;
+    doc.text(`Status: ${budget.status}`, 20, yPosition);
+    
+    // Rodapé
+    yPosition += 15;
+    doc.setFontSize(8);
+    doc.text('Gerado pelo Sistema Fortal CRM', 20, yPosition);
+    
+    // Salvar o PDF
+    const fileName = `orcamento_${budget.client_name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`;
+    doc.save(fileName);
   };
 
   return (
