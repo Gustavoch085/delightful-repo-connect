@@ -10,26 +10,62 @@ interface PDFGeneratorProps {
 }
 
 export function PDFGenerator({ budget, clientes, disabled = false }: PDFGeneratorProps) {
-  const generatePDF = () => {
+  const generatePDF = async () => {
     const doc = new jsPDF();
+    
+    // Add logo at the top
+    try {
+      const logoImg = new Image();
+      logoImg.crossOrigin = "anonymous";
+      
+      await new Promise((resolve, reject) => {
+        logoImg.onload = () => {
+          // Center the logo - A4 width is 210mm, logo width will be 60mm
+          const logoWidth = 60;
+          const logoHeight = 20;
+          const xPosition = (210 - logoWidth) / 2;
+          
+          doc.addImage(logoImg, 'PNG', xPosition, 10, logoWidth, logoHeight);
+          resolve(true);
+        };
+        logoImg.onerror = reject;
+        logoImg.src = '/lovable-uploads/1324f7f9-dab1-498b-beea-7455ba388e4c.png';
+      });
+    } catch (error) {
+      console.error('Erro ao carregar logo:', error);
+    }
+    
+    // Company CNPJ - centered below logo
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    const cnpjText = 'CNPJ: 29.564.347.0001-49';
+    const cnpjWidth = doc.getTextWidth(cnpjText);
+    const cnpjX = (210 - cnpjWidth) / 2;
+    doc.text(cnpjText, cnpjX, 40);
+    
+    // Horizontal line separator
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.5);
+    doc.line(20, 50, 190, 50);
     
     // Title
     doc.setFontSize(20);
-    doc.text('Orçamento', 20, 30);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Orçamento', 20, 65);
     
     // Client info
     doc.setFontSize(12);
-    doc.text(`Cliente: ${budget.client_name}`, 20, 50);
-    doc.text(`Data: ${new Date(budget.created_at).toLocaleDateString('pt-BR')}`, 20, 60);
+    doc.text(`Cliente: ${budget.client_name}`, 20, 80);
+    doc.text(`Data: ${new Date(budget.created_at).toLocaleDateString('pt-BR')}`, 20, 90);
     
     if (budget.delivery_date) {
-      doc.text(`Data de Entrega: ${new Date(budget.delivery_date).toLocaleDateString('pt-BR')}`, 20, 70);
+      doc.text(`Data de Entrega: ${new Date(budget.delivery_date).toLocaleDateString('pt-BR')}`, 20, 100);
     }
     
-    doc.text(`Status: ${budget.status}`, 20, 80);
+    doc.text(`Status: ${budget.status}`, 20, 110);
     
     // Items
-    let yPosition = 100;
+    let yPosition = 130;
     doc.text('Itens:', 20, yPosition);
     yPosition += 10;
     
