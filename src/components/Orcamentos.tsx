@@ -411,10 +411,16 @@ export function Orcamentos() {
     onSuccess: async (data) => {
       console.log('Status atualizado com sucesso!');
       
+      // Invalidar todas as queries relacionadas
       queryClient.invalidateQueries({ queryKey: ['orcamentos'] });
       queryClient.invalidateQueries({ queryKey: ['orcamentos-agenda'] });
       queryClient.invalidateQueries({ queryKey: ['faturas'] });
+      
+      // Invalidar queries de vendas para atualização automática
+      queryClient.invalidateQueries({ queryKey: ['vendas-geradas'] });
+      queryClient.invalidateQueries({ queryKey: ['vendas-realizadas'] });
       queryClient.invalidateQueries({ queryKey: ['vendas'] });
+      
       await refetch();
       
       addLog('edit', 'orcamento', data.title, `Status alterado para: ${data.status}`);
