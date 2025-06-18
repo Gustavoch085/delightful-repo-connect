@@ -1,5 +1,5 @@
 
-import { LayoutDashboard, Users, FileText, DollarSign, Calendar, LogOut, FileX, CalendarDays } from "lucide-react";
+import { LayoutDashboard, Users, FileText, DollarSign, Calendar, LogOut, FileX, CalendarDays, ShoppingCart } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -48,6 +48,12 @@ const menuItems = [
     permission: "orcamentos",
   },
   {
+    title: "Vendas",
+    url: "/vendas",
+    icon: ShoppingCart,
+    permission: "vendas",
+  },
+  {
     title: "Agenda",
     url: "/agenda",
     icon: CalendarDays,
@@ -83,7 +89,12 @@ export function AppSidebar() {
           <img 
             src="/lovable-uploads/5e33d1c8-1407-4145-b0cd-10aceaa0308a.png" 
             alt="Fortal CRM" 
-            className="h-8 w-auto object-contain"
+            className="h-8 w-auto object-contain max-w-full"
+            onError={(e) => {
+              console.log('Erro ao carregar logo:', e);
+              e.currentTarget.style.display = 'none';
+            }}
+            loading="eager"
           />
         </div>
       </SidebarHeader>
@@ -118,7 +129,12 @@ export function AppSidebar() {
               <img 
                 src="/lovable-uploads/5e33d1c8-1407-4145-b0cd-10aceaa0308a.png" 
                 alt="User Avatar" 
-                className="h-10 w-10 object-contain"
+                className="h-10 w-10 object-contain max-w-full"
+                onError={(e) => {
+                  console.log('Erro ao carregar avatar:', e);
+                  e.currentTarget.style.display = 'none';
+                }}
+                loading="eager"
               />
             </div>
             <div className="flex-1">

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -64,7 +63,9 @@ export function Orcamentos() {
   // Função para formatar data ISO (yyyy-mm-dd) para formato brasileiro (dd/mm/yyyy)
   const formatDateToBrazilian = (isoDate: string) => {
     if (!isoDate) return '';
-    return isoDate.split('-').reverse().join('/');
+    // Não adicionar horário para evitar problemas de timezone
+    const dateParts = isoDate.split('-');
+    return `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
   };
 
   // Query para buscar orçamentos
@@ -374,23 +375,34 @@ export function Orcamentos() {
       
       if (error) throw error;
 
-      // Se o status for "Venda Gerada" e houver data de entrega, criar evento na agenda
-      if (status === 'Venda Gerada' && data.delivery_date) {
-        const { error: agendaError } = await supabase
-          .from('agenda')
-          .insert({
-            title: `Entrega: ${data.title}`,
-            description: `Entrega do orçamento ${data.title} para ${data.client_name}`,
-            client_name: data.client_name,
-            start_time: new Date(data.delivery_date + 'T09:00:00').toISOString(),
-            end_time: new Date(data.delivery_date + 'T17:00:00').toISOString(),
-            status: 'Agendado'
-          });
+      // Se o status for "Venda Gerada", criar fatura automaticamente
+      if (status === 'Venda Gerada') {
+        console.log('Criando fatura automaticamente para venda gerada...');
         
-        if (agendaError) {
-          console.error('Erro ao criar evento na agenda:', agendaError);
-        } else {
-          console.log('Evento criado na agenda automaticamente');
+        // Verificar se já existe uma fatura para este orçamento
+        const { data: existingInvoice } = await supabase
+          .from('faturas')
+          .select('id')
+          .eq('orcamento_id', data.id)
+          .single();
+
+        if (!existingInvoice) {
+          const { error: faturaError } = await supabase
+            .from('faturas')
+            .insert({
+              title: data.title,
+              client_name: data.client_name,
+              value: data.total,
+              date: new Date().toISOString().split('T')[0], // Data atual
+              orcamento_id: data.id,
+              status: 'Pago'
+            });
+
+          if (faturaError) {
+            console.error('Erro ao criar fatura automaticamente:', faturaError);
+          } else {
+            console.log('Fatura criada automaticamente para venda gerada');
+          }
         }
       }
       
@@ -401,13 +413,15 @@ export function Orcamentos() {
       
       queryClient.invalidateQueries({ queryKey: ['orcamentos'] });
       queryClient.invalidateQueries({ queryKey: ['orcamentos-agenda'] });
+      queryClient.invalidateQueries({ queryKey: ['faturas'] });
+      queryClient.invalidateQueries({ queryKey: ['vendas'] });
       await refetch();
       
       addLog('edit', 'orcamento', data.title, `Status alterado para: ${data.status}`);
       
       let description = `Status do orçamento alterado para ${data.status}.`;
-      if (data.status === 'Venda Gerada' && data.delivery_date) {
-        description += ' Evento de entrega criado na agenda automaticamente.';
+      if (data.status === 'Venda Gerada') {
+        description += ' Fatura gerada automaticamente e venda enviada para agenda.';
       }
       
       toast({
@@ -480,8 +494,6 @@ export function Orcamentos() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Finalizado':
-        return 'bg-green-600 text-white border-green-600';
       case 'Venda Gerada':
         return 'bg-purple-600 text-white border-purple-600';
       case 'Aguardando':
@@ -491,9 +503,9 @@ export function Orcamentos() {
     }
   };
 
-  // Separar orçamentos por status
+  // Separar orçamentos por status - apenas Aguardando e Venda Gerada
   const pendingBudgets = budgets.filter(budget => budget.status === 'Aguardando');
-  const completedSales = budgets.filter(budget => budget.status === 'Venda Gerada' || budget.status === 'Finalizado');
+  const salesGenerated = budgets.filter(budget => budget.status === 'Venda Gerada');
 
   if (isLoading) {
     return (
@@ -543,24 +555,19 @@ export function Orcamentos() {
         </div>
       )}
 
-      {/* Tabs para separar orçamentos pendentes e vendas realizadas */}
+      {/* Tabs para separar orçamentos pendentes e vendas geradas */}
       <Tabs defaultValue="orcamentos" className="w-full">
         <TabsList className="grid w-full grid-cols-2 bg-crm-dark mb-6">
           <TabsTrigger value="orcamentos" className="text-gray-300 data-[state=active]:text-white">
             Orçamentos Pendentes ({pendingBudgets.length})
           </TabsTrigger>
-          <TabsTrigger value="vendas" className="text-gray-300 data-[state=active]:text-white">
+          <TabsTrigger value="vendas-geradas" className="text-gray-300 data-[state=active]:text-white">
             <ShoppingCart className="h-4 w-4 mr-2" />
-            Vendas Realizadas ({completedSales.length})
+            Vendas Geradas ({salesGenerated.length})
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="orcamentos">
-          {/* Debug: Mostrar quantos orçamentos pendentes temos */}
-          <div className="mb-4 text-white text-sm">
-            Orçamentos pendentes: {pendingBudgets.length}
-          </div>
-
           {/* Orçamentos Pendentes */}
           <div className="grid grid-cols-1 gap-6">
             {pendingBudgets.map((budget) => {
@@ -585,7 +592,6 @@ export function Orcamentos() {
                             <SelectContent className="bg-crm-dark border-crm-border">
                               <SelectItem value="Aguardando" className="text-white">Aguardando</SelectItem>
                               <SelectItem value="Venda Gerada" className="text-white">Venda Gerada</SelectItem>
-                              <SelectItem value="Finalizado" className="text-white">Finalizado</SelectItem>
                             </SelectContent>
                           </Select>
                           <PDFGenerator 
@@ -648,27 +654,21 @@ export function Orcamentos() {
           </div>
         </TabsContent>
 
-        <TabsContent value="vendas">
-          {/* Debug: Mostrar quantas vendas temos */}
-          <div className="mb-4 text-white text-sm">
-            Vendas realizadas: {completedSales.length}
-          </div>
-
-          {/* Vendas Realizadas */}
+        <TabsContent value="vendas-geradas">
+          {/* Vendas Geradas */}
           <div className="grid grid-cols-1 gap-6">
-            {completedSales.map((budget) => {
-              // Encontrar dados completos do cliente
+            {salesGenerated.map((budget) => {
               const cliente = clientes.find(c => c.name === budget.client_name);
               
               return (
-                <Card key={budget.id} className="bg-crm-card border-crm-border border-green-500/30">
+                <Card key={budget.id} className="bg-crm-card border-crm-border border-purple-500/30">
                   <CardContent className="p-6">
                     <div className="flex justify-between items-start mb-4">
                       <div>
                         <div className="flex items-center gap-3 mb-2">
                           <h3 className="text-xl font-semibold text-white">{budget.title}</h3>
                           <div className={`px-3 py-1 rounded ${getStatusColor(budget.status)} text-sm font-medium`}>
-                            {budget.status}
+                            Venda Gerada
                           </div>
                           <PDFGenerator 
                             budget={budget} 
@@ -690,10 +690,8 @@ export function Orcamentos() {
                       </div>
                       <div className="text-right">
                         <p className="text-gray-400 text-sm">Valor da Venda</p>
-                        <p className="text-2xl font-bold text-green-400">{formatCurrency(budget.total)}</p>
-                        {budget.status === 'Venda Gerada' && (
-                          <p className="text-green-400 text-sm mt-1">✓ Venda Confirmada</p>
-                        )}
+                        <p className="text-2xl font-bold text-purple-400">{formatCurrency(budget.total)}</p>
+                        <p className="text-purple-400 text-sm mt-1">✓ Venda Confirmada</p>
                       </div>
                     </div>
                     

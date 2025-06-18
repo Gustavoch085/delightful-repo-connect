@@ -1,13 +1,19 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, User, Package, DollarSign, AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar, Clock, User, Package, DollarSign, AlertTriangle, Check } from "lucide-react";
 import { format, isAfter, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 export function Agenda() {
-  const { data: budgets = [], isLoading } = useQuery({
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const { data: budgets = [], isLoading, refetch } = useQuery({
     queryKey: ['orcamentos-agenda'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -22,7 +28,7 @@ export function Agenda() {
             subtotal
           )
         `)
-        .eq('status', 'Aguardando')
+        .eq('status', 'Venda Gerada')
         .order('delivery_date', { ascending: true, nullsFirst: false });
       
       if (error) {
@@ -39,13 +45,47 @@ export function Agenda() {
     retry: 3,
   });
 
+  // Marcar entrega como concluída
+  const marcarConcluida = useMutation({
+    mutationFn: async (budgetId: string) => {
+      const { data, error } = await supabase
+        .from('orcamentos')
+        .update({ status: 'Finalizado' })
+        .eq('id', budgetId)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orcamentos-agenda'] });
+      queryClient.invalidateQueries({ queryKey: ['vendas'] });
+      refetch();
+      
+      toast({
+        title: "Entrega concluída",
+        description: "A entrega foi marcada como concluída com sucesso.",
+      });
+    },
+    onError: (error) => {
+      console.error('Erro ao marcar entrega como concluída:', error);
+      toast({
+        title: "Erro ao marcar entrega",
+        description: "Não foi possível marcar a entrega como concluída.",
+        variant: "destructive",
+      });
+    }
+  });
+
   const getDeliveryStatus = (deliveryDate: string | null) => {
     if (!deliveryDate) {
       return { status: "sem-data", color: "bg-gray-600 text-white" };
     }
     
     const today = new Date();
-    const delivery = new Date(deliveryDate + 'T00:00:00');
+    // Corrigir problema de timezone - usar horário do meio-dia para evitar problemas
+    const delivery = new Date(deliveryDate + 'T12:00:00');
     
     if (isSameDay(delivery, today)) {
       return { status: "hoje", color: "bg-yellow-600 text-white" };
@@ -58,7 +98,8 @@ export function Agenda() {
 
   const formatDeliveryDate = (dateString: string | null) => {
     if (!dateString) return "Data não definida";
-    const date = new Date(dateString + 'T00:00:00');
+    // Corrigir problema de timezone - usar horário do meio-dia
+    const date = new Date(dateString + 'T12:00:00');
     return format(date, "dd/MM/yyyy", { locale: ptBR });
   };
 
@@ -89,6 +130,10 @@ export function Agenda() {
     }).format(numericValue);
   };
 
+  const handleMarcarConcluida = (budgetId: string) => {
+    marcarConcluida.mutate(budgetId);
+  };
+
   if (isLoading) {
     return (
       <div className="p-6 bg-crm-dark min-h-screen flex items-center justify-center">
@@ -110,18 +155,18 @@ export function Agenda() {
             <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-white mb-2">Nenhuma entrega pendente</h3>
             <p className="text-gray-400">
-              Apenas orçamentos "Aguardando" aparecerão aqui.
+              Apenas vendas geradas aparecerão aqui para agendamento de entrega.
             </p>
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-8">
-          {/* Orçamentos com data de entrega */}
+          {/* Entregas com data agendada */}
           {budgets.filter(budget => budget.delivery_date).length > 0 && (
             <div>
               <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
                 <Calendar className="h-5 w-5" />
-                Entregas Agendadas
+                Entregas Agendadas ({budgets.filter(budget => budget.delivery_date).length})
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {budgets.filter(budget => budget.delivery_date).map((budget) => {
@@ -176,6 +221,17 @@ export function Agenda() {
                             )}
                           </div>
                         </div>
+                        
+                        <div className="pt-2 border-t border-crm-border">
+                          <Button
+                            onClick={() => handleMarcarConcluida(budget.id)}
+                            disabled={marcarConcluida.isPending}
+                            className="w-full bg-green-600 hover:bg-green-700"
+                          >
+                            <Check className="h-4 w-4 mr-2" />
+                            Marcar como Entregue
+                          </Button>
+                        </div>
                       </CardContent>
                     </Card>
                   );
@@ -184,12 +240,12 @@ export function Agenda() {
             </div>
           )}
 
-          {/* Orçamentos sem data de entrega */}
+          {/* Entregas sem data definida */}
           {budgets.filter(budget => !budget.delivery_date).length > 0 && (
             <div>
               <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-yellow-500" />
-                Orçamentos Sem Data de Entrega
+                Vendas Sem Data de Entrega ({budgets.filter(budget => !budget.delivery_date).length})
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {budgets.filter(budget => !budget.delivery_date).map((budget) => {
@@ -243,6 +299,17 @@ export function Agenda() {
                               </div>
                             )}
                           </div>
+                        </div>
+                        
+                        <div className="pt-2 border-t border-crm-border">
+                          <Button
+                            onClick={() => handleMarcarConcluida(budget.id)}
+                            disabled={marcarConcluida.isPending}
+                            className="w-full bg-green-600 hover:bg-green-700"
+                          >
+                            <Check className="h-4 w-4 mr-2" />
+                            Marcar como Entregue
+                          </Button>
                         </div>
                       </CardContent>
                     </Card>

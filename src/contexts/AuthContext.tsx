@@ -1,84 +1,63 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface User {
   id: string;
-  email: string;
   name: string;
-  role: 'admin' | 'staff';
-  permissions: string[];
+  role: 'admin' | 'funcionario';
 }
 
 interface AuthContextType {
   user: User | null;
-  isLoading: boolean;
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
-  isAuthenticated: boolean;
   hasPermission: (permission: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+// Lista de usuários do sistema
+const users = [
+  {
+    id: '1',
+    username: 'admin',
+    password: 'admin123',
+    name: 'Administrador',
+    role: 'admin' as const
+  },
+  {
+    id: '2',
+    username: 'funcionario',
+    password: 'func123',
+    name: 'Funcionário',
+    role: 'funcionario' as const
   }
-  return context;
+];
+
+// Mapeamento de permissões por role
+const rolePermissions = {
+  admin: [
+    'dashboard',
+    'clientes',
+    'produtos',
+    'relatorios',
+    'orcamentos',
+    'vendas',
+    'agenda',
+    'logs'
+  ],
+  funcionario: [
+    'dashboard',
+    'clientes',
+    'produtos',
+    'orcamentos',
+    'vendas',
+    'agenda'
+  ]
 };
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
-// Credenciais e permissões por cargo
-const USERS = {
-  admin: {
-    password: '#crm1221@',
-    userData: {
-      id: '1',
-      email: 'admin@fortal.com',
-      name: 'Administrador',
-      role: 'admin' as const,
-      permissions: ['dashboard', 'clientes', 'produtos', 'relatorios', 'orcamentos', 'agenda', 'logs']
-    }
-  },
-  staff: {
-    password: '#crm22f11@',
-    userData: {
-      id: '2',
-      email: 'staff@fortal.com',
-      name: 'Funcionário',
-      role: 'staff' as const,
-      permissions: ['dashboard', 'clientes', 'produtos', 'orcamentos', 'agenda']
-    }
-  },
-  jenifferleite: {
-    password: 'agencia3149',
-    userData: {
-      id: '3',
-      email: 'jenifer@fortal.com',
-      name: 'Jenifer Leite',
-      role: 'staff' as const,
-      permissions: ['dashboard', 'clientes', 'produtos', 'relatorios', 'orcamentos', 'agenda', 'logs']
-    }
-  },
-  marcusvinicius: {
-    password: 'agencia3149',
-    userData: {
-      id: '4',
-      email: 'marcus@fortal.com',
-      name: 'Marcus Vinícius',
-      role: 'staff' as const,
-      permissions: ['dashboard', 'clientes', 'produtos', 'relatorios', 'orcamentos', 'agenda', 'logs']
-    }
-  }
-};
-
-export const AuthProvider = ({ children }: AuthProviderProps) => {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Verificar se há um usuário logado no localStorage
@@ -86,28 +65,24 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     if (savedUser) {
       setUser(JSON.parse(savedUser));
     }
-    setIsLoading(false);
   }, []);
 
   const login = async (username: string, password: string): Promise<boolean> => {
-    setIsLoading(true);
+    const foundUser = users.find(u => u.username === username && u.password === password);
     
-    // Simular delay de login
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // Validar credenciais
-        const userConfig = USERS[username as keyof typeof USERS];
-        if (userConfig && password === userConfig.password) {
-          setUser(userConfig.userData);
-          localStorage.setItem('user', JSON.stringify(userConfig.userData));
-          setIsLoading(false);
-          resolve(true);
-        } else {
-          setIsLoading(false);
-          resolve(false);
-        }
-      }, 1000);
-    });
+    if (foundUser) {
+      const userSession = {
+        id: foundUser.id,
+        name: foundUser.name,
+        role: foundUser.role
+      };
+      
+      setUser(userSession);
+      localStorage.setItem('user', JSON.stringify(userSession));
+      return true;
+    }
+    
+    return false;
   };
 
   const logout = () => {
@@ -116,17 +91,21 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   const hasPermission = (permission: string): boolean => {
-    return user?.permissions.includes(permission) || false;
+    if (!user) return false;
+    return rolePermissions[user.role].includes(permission);
   };
 
-  const value = {
-    user,
-    isLoading,
-    login,
-    logout,
-    isAuthenticated: !!user,
-    hasPermission
-  };
+  return (
+    <AuthContext.Provider value={{ user, login, logout, hasPermission }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}
