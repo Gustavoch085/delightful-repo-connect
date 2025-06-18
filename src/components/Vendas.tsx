@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ShoppingCart, User, Calendar, DollarSign, Package, Check, RefreshCw, TrendingUp } from "lucide-react";
+import { ShoppingCart, User, Calendar, DollarSign, Package, Check, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -12,14 +12,14 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 export function Vendas() {
-  const [showHistorico, setShowHistorico] = useState(false);
+  const [showVendasRealizadas, setShowVendasRealizadas] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Buscar vendas geradas
-  const { data: vendas = [], isLoading, refetch } = useQuery({
-    queryKey: ['vendas'],
+  // Buscar vendas geradas (para o botão Finalizar Serviço)
+  const { data: vendasGeradas = [], isLoading: isLoadingGeradas, refetch: refetchGeradas } = useQuery({
+    queryKey: ['vendas-geradas'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('orcamentos')
@@ -39,7 +39,32 @@ export function Vendas() {
       if (error) throw error;
       return data || [];
     },
-    enabled: showHistorico
+    enabled: !showVendasRealizadas
+  });
+
+  // Buscar vendas realizadas (finalizadas)
+  const { data: vendasRealizadas = [], isLoading: isLoadingRealizadas, refetch: refetchRealizadas } = useQuery({
+    queryKey: ['vendas-realizadas'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('orcamentos')
+        .select(`
+          *,
+          orcamento_items (
+            id,
+            product_name,
+            price,
+            quantity,
+            subtotal
+          )
+        `)
+        .eq('status', 'Finalizado')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: showVendasRealizadas
   });
 
   // Buscar clientes para filtros
@@ -53,8 +78,7 @@ export function Vendas() {
       
       if (error) throw error;
       return data;
-    },
-    enabled: showHistorico
+    }
   });
 
   // Marcar venda como finalizada
@@ -71,9 +95,10 @@ export function Vendas() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['vendas'] });
+      queryClient.invalidateQueries({ queryKey: ['vendas-geradas'] });
+      queryClient.invalidateQueries({ queryKey: ['vendas-realizadas'] });
       queryClient.invalidateQueries({ queryKey: ['orcamentos-agenda'] });
-      refetch();
+      refetchGeradas();
       
       toast({
         title: "Venda finalizada",
@@ -112,54 +137,18 @@ export function Vendas() {
     finalizarVendaMutation.mutate(vendaId);
   };
 
+  // Determinar quais dados usar baseado na tela atual
+  const currentData = showVendasRealizadas ? vendasRealizadas : vendasGeradas;
+  const isLoading = showVendasRealizadas ? isLoadingRealizadas : isLoadingGeradas;
+  
   const filteredVendas = selectedStatus === "all" 
-    ? vendas 
-    : vendas.filter(venda => venda.client_name === selectedStatus);
+    ? currentData 
+    : currentData.filter(venda => venda.client_name === selectedStatus);
 
   const clientesComVendas = Array.from(new Set(
-    vendas.map(venda => venda.client_name)
+    currentData.map(venda => venda.client_name)
   )).sort();
 
-  // Tela inicial com botão principal
-  if (!showHistorico) {
-    return (
-      <div className="p-6 bg-crm-dark min-h-screen">
-        <div className="flex justify-center items-center min-h-[80vh]">
-          <div className="text-center space-y-8">
-            <div className="flex items-center justify-center gap-3 mb-8">
-              <ShoppingCart className="h-12 w-12 text-green-400" />
-              <h1 className="text-4xl font-bold text-white">Módulo de Vendas</h1>
-            </div>
-            
-            <Card className="bg-crm-card border-crm-border p-8 max-w-md mx-auto">
-              <CardContent className="text-center space-y-6">
-                <TrendingUp className="h-16 w-16 text-green-400 mx-auto" />
-                <div>
-                  <h2 className="text-xl font-semibold text-white mb-2">
-                    Histórico de Vendas
-                  </h2>
-                  <p className="text-gray-400 mb-6">
-                    Visualize todas as vendas realizadas e gerencie o status dos serviços
-                  </p>
-                </div>
-                
-                <Button
-                  onClick={() => setShowHistorico(true)}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6"
-                  size="lg"
-                >
-                  <ShoppingCart className="h-5 w-5 mr-2" />
-                  Vendas Realizadas
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Tela do histórico de vendas
   if (isLoading) {
     return (
       <div className="p-6 bg-crm-dark min-h-screen flex items-center justify-center">
@@ -172,18 +161,23 @@ export function Vendas() {
     <div className="p-6 bg-crm-dark min-h-screen">
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center gap-3">
-          <Button
-            onClick={() => setShowHistorico(false)}
-            variant="outline"
-            className="border-gray-600 text-gray-300 hover:bg-gray-700"
-          >
-            ← Voltar
-          </Button>
           <ShoppingCart className="h-8 w-8 text-green-400" />
-          <h1 className="text-3xl font-bold text-white">Vendas Realizadas</h1>
+          <h1 className="text-3xl font-bold text-white">
+            {showVendasRealizadas ? "Vendas Realizadas" : "Vendas"}
+          </h1>
         </div>
         
         <div className="flex items-center gap-4">
+          <Button
+            onClick={() => {
+              setShowVendasRealizadas(!showVendasRealizadas);
+              setSelectedStatus("all");
+            }}
+            className={showVendasRealizadas ? "bg-gray-600 hover:bg-gray-700" : "bg-green-600 hover:bg-green-700"}
+          >
+            {showVendasRealizadas ? "← Voltar para Vendas" : "Vendas Realizadas"}
+          </Button>
+          
           <div className="flex items-center gap-2">
             <User className="h-4 w-4 text-gray-400" />
             <Select value={selectedStatus} onValueChange={setSelectedStatus}>
@@ -202,7 +196,7 @@ export function Vendas() {
           </div>
           
           <Button 
-            onClick={() => refetch()}
+            onClick={() => showVendasRealizadas ? refetchRealizadas() : refetchGeradas()}
             variant="outline"
             className="border-gray-600 text-gray-300 hover:bg-gray-700"
           >
@@ -218,7 +212,9 @@ export function Vendas() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-400 text-sm">Total de Vendas</p>
+                <p className="text-gray-400 text-sm">
+                  {showVendasRealizadas ? "Vendas Realizadas" : "Vendas Geradas"}
+                </p>
                 <p className="text-2xl font-bold text-green-400">{filteredVendas.length}</p>
               </div>
               <ShoppingCart className="h-8 w-8 text-green-400" />
@@ -260,10 +256,12 @@ export function Vendas() {
         <Card className="bg-crm-card border-crm-border">
           <CardContent className="p-8 text-center">
             <ShoppingCart className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-white mb-2">Nenhuma venda encontrada</h3>
+            <h3 className="text-xl font-semibold text-white mb-2">
+              {showVendasRealizadas ? "Nenhuma venda realizada encontrada" : "Nenhuma venda encontrada"}
+            </h3>
             <p className="text-gray-400">
               {selectedStatus === "all" 
-                ? "Nenhuma venda foi registrada ainda." 
+                ? (showVendasRealizadas ? "Nenhuma venda foi finalizada ainda." : "Nenhuma venda foi registrada ainda.")
                 : `Nenhuma venda encontrada para ${selectedStatus}.`
               }
             </p>
@@ -280,18 +278,20 @@ export function Vendas() {
                   <div className="flex justify-between items-start">
                     <div className="flex items-center gap-3">
                       <CardTitle className="text-xl text-white">{venda.title}</CardTitle>
-                      <Badge className="bg-green-600 text-white">
-                        Venda Confirmada
+                      <Badge className={showVendasRealizadas ? "bg-blue-600 text-white" : "bg-green-600 text-white"}>
+                        {showVendasRealizadas ? "Serviço Finalizado" : "Venda Confirmada"}
                       </Badge>
                     </div>
-                    <Button
-                      onClick={() => handleFinalizarVenda(venda.id)}
-                      disabled={finalizarVendaMutation.isPending}
-                      className="bg-blue-600 hover:bg-blue-700"
-                    >
-                      <Check className="h-4 w-4 mr-2" />
-                      Finalizar Serviço
-                    </Button>
+                    {!showVendasRealizadas && (
+                      <Button
+                        onClick={() => handleFinalizarVenda(venda.id)}
+                        disabled={finalizarVendaMutation.isPending}
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        <Check className="h-4 w-4 mr-2" />
+                        Finalizar Serviço
+                      </Button>
+                    )}
                   </div>
                 </CardHeader>
                 
