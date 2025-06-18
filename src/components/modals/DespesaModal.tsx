@@ -20,8 +20,31 @@ export function DespesaModal({ open, onOpenChange, despesa, onSave }: DespesaMod
     title: despesa?.title || "",
     client: despesa?.client || "",
     value: despesa?.value ? despesa.value.replace('- R$ ', '').replace('.', '').replace(',', '.') : "",
-    date: despesa?.date || new Date().toISOString().split('T')[0],
+    date: despesa?.date || "",
   });
+
+  useEffect(() => {
+    if (despesa) {
+      // Se tem despesa para editar, formatar a data para DD/MM/AAAA
+      const dateFormatted = despesa.date ? formatDateToDisplay(despesa.date) : "";
+      setFormData({
+        title: despesa.title || "",
+        client: despesa.client || "",
+        value: despesa.value ? despesa.value.replace('- R$ ', '').replace('.', '').replace(',', '.') : "",
+        date: dateFormatted,
+      });
+    } else {
+      // Se é nova despesa, usar data atual formatada
+      const today = new Date();
+      const todayFormatted = formatDateToDisplay(today.toISOString().split('T')[0]);
+      setFormData({
+        title: "",
+        client: "",
+        value: "",
+        date: todayFormatted,
+      });
+    }
+  }, [despesa, open]);
 
   // Busca clientes do Supabase
   const { data: clientes = [] } = useQuery({
@@ -36,6 +59,37 @@ export function DespesaModal({ open, onOpenChange, despesa, onSave }: DespesaMod
       return data;
     }
   });
+
+  const formatDateToDisplay = (dateString: string) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  const formatDateToISO = (dateString: string) => {
+    if (!dateString || dateString.length !== 10) return "";
+    const [day, month, year] = dateString.split('/');
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+  };
+
+  const handleDateChange = (value: string) => {
+    // Remove tudo que não for número
+    const numbersOnly = value.replace(/\D/g, '');
+    
+    // Aplica a máscara DD/MM/AAAA
+    let formattedDate = '';
+    for (let i = 0; i < numbersOnly.length && i < 8; i++) {
+      if (i === 2 || i === 4) {
+        formattedDate += '/';
+      }
+      formattedDate += numbersOnly[i];
+    }
+    
+    setFormData({ ...formData, date: formattedDate });
+  };
 
   const formatPrice = (value: string) => {
     // Remove tudo que não for número
@@ -60,13 +114,28 @@ export function DespesaModal({ open, onOpenChange, despesa, onSave }: DespesaMod
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Converter data para formato ISO antes de salvar
+    const isoDate = formatDateToISO(formData.date);
+    if (!isoDate) {
+      alert('Por favor, insira uma data válida no formato DD/MM/AAAA');
+      return;
+    }
+
     onSave({
       ...formData,
       id: despesa?.id || Date.now(),
       value: `- R$ ${formData.value}`,
+      date: isoDate,
     });
     onOpenChange(false);
-    setFormData({ title: "", client: "", value: "", date: new Date().toISOString().split('T')[0] });
+    
+    // Reset form se não for edição
+    if (!despesa) {
+      const today = new Date();
+      const todayFormatted = formatDateToDisplay(today.toISOString().split('T')[0]);
+      setFormData({ title: "", client: "", value: "", date: todayFormatted });
+    }
   };
 
   return (
@@ -121,9 +190,11 @@ export function DespesaModal({ open, onOpenChange, despesa, onSave }: DespesaMod
             <Label htmlFor="date">Data</Label>
             <Input
               id="date"
-              type="date"
+              type="text"
               value={formData.date}
-              onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+              onChange={(e) => handleDateChange(e.target.value)}
+              placeholder="DD/MM/AAAA"
+              maxLength={10}
               className="bg-crm-dark border-crm-border text-white"
               required
             />
