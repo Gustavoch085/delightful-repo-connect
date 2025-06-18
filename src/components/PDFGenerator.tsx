@@ -64,6 +64,11 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
     
     doc.text(`Status: ${budget.status}`, 20, 110);
     
+    // Linha horizontal após dados do cliente
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.5);
+    doc.line(20, 120, 190, 120);
+    
     // Items
     let yPosition = 130;
     doc.text('Itens:', 20, yPosition);
@@ -81,8 +86,14 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
       });
     }
     
+    // Linha horizontal após os itens
+    yPosition += 5;
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.5);
+    doc.line(20, yPosition, 190, yPosition);
+    
     // Total
-    yPosition += 10;
+    yPosition += 15;
     doc.setFontSize(14);
     doc.text(`Total: R$ ${total.toFixed(2)}`, 20, yPosition);
     
