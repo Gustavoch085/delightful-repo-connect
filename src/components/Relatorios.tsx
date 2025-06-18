@@ -1,9 +1,10 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TrendingUp, TrendingDown, DollarSign, Edit, Trash2, Plus, User, Calendar } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, Edit, Trash2, Plus, User, Calendar, RotateCcw } from "lucide-react";
 import { DespesaModal } from "./modals/DespesaModal";
 import { FaturaModal } from "./modals/FaturaModal";
 import { RelatorioMensalModal } from "./modals/RelatorioMensalModal";
@@ -324,19 +325,71 @@ export function Relatorios() {
     setRelatorioMensalModalOpen(true);
   };
 
+  const handleReset = async () => {
+    const confirmReset = window.confirm(
+      'Tem certeza que deseja apagar todas as despesas e faturas? Esta ação não pode ser desfeita.'
+    );
+    
+    if (!confirmReset) return;
+
+    try {
+      // Deletar todas as despesas
+      const { error: expenseError } = await supabase
+        .from('despesas')
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000'); // Deletar todos os registros
+      
+      if (expenseError) {
+        console.error('Erro ao deletar despesas:', expenseError);
+        return;
+      }
+
+      // Deletar todas as faturas
+      const { error: revenueError } = await supabase
+        .from('faturas')
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000'); // Deletar todos os registros
+      
+      if (revenueError) {
+        console.error('Erro ao deletar faturas:', revenueError);
+        return;
+      }
+
+      // Atualizar os dados
+      refetchExpenses();
+      refetchRevenues();
+      
+      alert('Todas as despesas e faturas foram apagadas com sucesso!');
+    } catch (error) {
+      console.error('Erro no reset:', error);
+      alert('Erro ao realizar o reset. Tente novamente.');
+    }
+  };
+
   return (
     <div className="p-6 bg-crm-dark min-h-screen">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-white">Relatórios Financeiros</h1>
         
-        {/* Botão do relatório do mês anterior - sempre visível */}
-        <Button
-          onClick={handleShowPreviousMonthReport}
-          className="bg-purple-600 hover:bg-purple-700"
-        >
-          <Calendar className="h-4 w-4 mr-2" />
-          Relatório de {getMonthName(previousMonth)} {previousYear}
-        </Button>
+        <div className="flex gap-3">
+          {/* Botão Reset */}
+          <Button
+            onClick={handleReset}
+            className="bg-red-600 hover:bg-red-700"
+          >
+            <RotateCcw className="h-4 w-4 mr-2" />
+            Reset
+          </Button>
+          
+          {/* Botão do relatório do mês anterior */}
+          <Button
+            onClick={handleShowPreviousMonthReport}
+            className="bg-purple-600 hover:bg-purple-700"
+          >
+            <Calendar className="h-4 w-4 mr-2" />
+            Relatório de {getMonthName(previousMonth)} {previousYear}
+          </Button>
+        </div>
       </div>
       
       {/* Financial Stats */}
