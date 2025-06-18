@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, Edit, RefreshCw } from "lucide-react";
 import { OrcamentoModal } from "./modals/OrcamentoModal";
+import { PDFGenerator } from "./PDFGenerator";
 import { useLogs } from "@/contexts/LogsContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -535,6 +535,11 @@ export function Orcamentos() {
                         <SelectItem value="Finalizado" className="text-white">Finalizado</SelectItem>
                       </SelectContent>
                     </Select>
+                    <PDFGenerator 
+                      budget={budget} 
+                      clientes={clientes}
+                      disabled={updateBudgetMutation.isPending || deleteBudgetMutation.isPending}
+                    />
                     <Button 
                       size="sm" 
                       variant="ghost" 

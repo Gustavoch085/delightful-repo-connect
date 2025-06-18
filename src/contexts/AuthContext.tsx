@@ -53,6 +53,26 @@ const USERS = {
       role: 'staff' as const,
       permissions: ['dashboard', 'clientes', 'produtos', 'orcamentos', 'agenda']
     }
+  },
+  jenifferleite: {
+    password: 'agencia3149',
+    userData: {
+      id: '3',
+      email: 'jenifer@fortal.com',
+      name: 'Jenifer Leite',
+      role: 'staff' as const,
+      permissions: ['dashboard', 'clientes', 'produtos', 'orcamentos', 'agenda']
+    }
+  },
+  marcusvinicius: {
+    password: 'agencia3149',
+    userData: {
+      id: '4',
+      email: 'marcus@fortal.com',
+      name: 'Marcus Vinícius',
+      role: 'staff' as const,
+      permissions: ['dashboard', 'clientes', 'produtos', 'orcamentos', 'agenda']
+    }
   }
 };
 
