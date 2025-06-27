@@ -1,3 +1,4 @@
+
 import { FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import jsPDF from 'jspdf';
@@ -19,129 +20,144 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
   const generatePDF = async () => {
     const doc = new jsPDF();
     
-    // Add logo at the top
+    // Header com "orçamento detalhado"
+    try {
+      const headerImg = new Image();
+      headerImg.crossOrigin = "anonymous";
+      
+      await new Promise((resolve, reject) => {
+        headerImg.onload = () => {
+          // Header "orçamento detalhado" - largura total
+          doc.addImage(headerImg, 'PNG', 0, 0, 210, 20);
+          resolve(true);
+        };
+        headerImg.onerror = reject;
+        headerImg.src = '/lovable-uploads/16944181-86d9-4ae8-be5d-9b6782c41733.png';
+      });
+    } catch (error) {
+      console.error('Erro ao carregar header:', error);
+      // Fallback: criar header com texto
+      doc.setFillColor(0, 0, 0);
+      doc.rect(0, 0, 210, 20, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(16);
+      doc.text('orçamento detalhado', 105, 12, { align: 'center' });
+    }
+    
+    // Encontrar dados do cliente
+    const cliente = clientes.find(c => c.name === budget.client_name);
+    
+    // Seção de informações do cliente
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(12);
+    
+    // CLIENTE e TELEFONE (lado esquerdo)
+    doc.text('CLIENTE:', 20, 40);
+    doc.text(budget.client_name || '', 20, 50);
+    doc.text('TELEFONE:', 20, 60);
+    doc.text(cliente?.telefone || '', 20, 70);
+    
+    // ENDEREÇO e BAIRRO/CIDADE (lado direito)
+    doc.text('ENDEREÇO:', 120, 40);
+    doc.text(cliente?.endereco || 'XXXXXX', 120, 50);
+    doc.text('BAIRRO/CIDADE:', 120, 60);
+    doc.text(`${cliente?.cidade || 'FORTALEZA'}-CE`, 120, 70);
+    
+    // Linha horizontal separadora
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(1);
+    doc.line(20, 80, 190, 80);
+    
+    // Cabeçalho da tabela
+    doc.setFillColor(0, 0, 0);
+    doc.rect(20, 90, 170, 15, 'F');
+    
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(12);
+    doc.text('Nº', 25, 100);
+    doc.text('Descrição do Produto', 45, 100);
+    doc.text('Preço', 120, 100);
+    doc.text('Qt.', 150, 100);
+    doc.text('Total', 170, 100);
+    
+    // Itens da tabela
+    doc.setTextColor(0, 0, 0);
+    let yPosition = 115;
+    let totalGeral = 0;
+    
+    if (budget.orcamento_items && budget.orcamento_items.length > 0) {
+      budget.orcamento_items.forEach((item: any, index: number) => {
+        const subtotal = item.quantity * parseFloat(item.price);
+        totalGeral += subtotal;
+        
+        // Número do item
+        doc.text((index + 1).toString(), 25, yPosition);
+        
+        // Nome do produto
+        doc.text(item.product_name, 45, yPosition);
+        
+        // Preço unitário
+        doc.text(`R$ ${formatCurrency(parseFloat(item.price))}`, 120, yPosition);
+        
+        // Quantidade
+        doc.text(item.quantity.toString(), 155, yPosition);
+        
+        // Total do item
+        doc.text(`R$ ${formatCurrency(subtotal)}`, 170, yPosition);
+        
+        yPosition += 15;
+      });
+    }
+    
+    // Espaçamento antes do total
+    yPosition += 10;
+    
+    // Total final com fundo preto
+    doc.setFillColor(0, 0, 0);
+    doc.rect(150, yPosition - 5, 40, 15, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(14);
+    doc.text(`R$ ${formatCurrency(totalGeral)}`, 170, yPosition + 5, { align: 'center' });
+    
+    // Informações adicionais
+    yPosition += 30;
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(10);
+    doc.text('Orçamento válido por: 15 dias', 20, yPosition);
+    doc.text('Pagamento de 50% no ato do fechamento, restante do valor', 20, yPosition + 10);
+    doc.text('na instalação do material.', 20, yPosition + 20);
+    
+    // Logo e CNPJ no rodapé
     try {
       const logoImg = new Image();
       logoImg.crossOrigin = "anonymous";
       
       await new Promise((resolve, reject) => {
         logoImg.onload = () => {
-          // Center the logo - A4 width is 210mm, logo width will be 60mm
-          const logoWidth = 60;
-          const logoHeight = 20;
-          const xPosition = (210 - logoWidth) / 2;
-          
-          doc.addImage(logoImg, 'PNG', xPosition, 10, logoWidth, logoHeight);
+          // Logo no canto inferior esquerdo
+          doc.addImage(logoImg, 'PNG', 20, 250, 60, 30);
           resolve(true);
         };
         logoImg.onerror = reject;
-        logoImg.src = '/lovable-uploads/1324f7f9-dab1-498b-beea-7455ba388e4c.png';
+        logoImg.src = '/lovable-uploads/35e55213-9712-49dd-a567-4fd516d25498.png';
       });
     } catch (error) {
       console.error('Erro ao carregar logo:', error);
+      // Fallback: criar retângulo preto com "logo 1"
+      doc.setFillColor(0, 0, 0);
+      doc.rect(20, 250, 60, 30, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(16);
+      doc.text('logo 1', 50, 270, { align: 'center' });
     }
     
-    // Company CNPJ - centered below logo
-    doc.setFontSize(10);
-    doc.setTextColor(100, 100, 100);
-    const cnpjText = 'CNPJ: 29.564.347.0001-49';
-    const cnpjWidth = doc.getTextWidth(cnpjText);
-    const cnpjX = (210 - cnpjWidth) / 2;
-    doc.text(cnpjText, cnpjX, 40);
-    
-    // Horizontal line separator
-    doc.setDrawColor(200, 200, 200);
-    doc.setLineWidth(0.5);
-    doc.line(20, 50, 190, 50);
-    
-    // Title
-    doc.setFontSize(20);
+    // CNPJ no canto inferior direito
     doc.setTextColor(0, 0, 0);
-    doc.text('Orçamento', 20, 65);
-    
-    // Find client data to get the city
-    const cliente = clientes.find(c => c.name === budget.client_name);
-    
-    // Client info
     doc.setFontSize(12);
-    doc.text(`Cliente: ${budget.client_name}`, 20, 80);
+    doc.text('29.564.347.0001-49', 190, 270, { align: 'right' });
     
-    // Declare yPosition outside the conditional blocks
-    let yPosition = 90;
-    
-    // Add city if available
-    if (cliente?.cidade) {
-      doc.text(`Cidade: ${cliente.cidade}`, 20, yPosition);
-      yPosition += 10;
-      doc.text(`Data: ${new Date(budget.created_at).toLocaleDateString('pt-BR')}`, 20, yPosition);
-      yPosition += 10;
-      
-      if (budget.delivery_date) {
-        doc.text(`Data de Entrega: ${new Date(budget.delivery_date).toLocaleDateString('pt-BR')}`, 20, yPosition);
-        yPosition += 10;
-      }
-      
-      doc.text(`Status: ${budget.status}`, 20, yPosition);
-      yPosition += 10;
-      
-      // Linha horizontal após dados do cliente
-      doc.setDrawColor(200, 200, 200);
-      doc.setLineWidth(0.5);
-      doc.line(20, yPosition, 190, yPosition);
-      yPosition += 10;
-      
-      // Items
-      doc.text('Itens:', 20, yPosition);
-      yPosition += 10;
-    } else {
-      // Without city, keep original spacing
-      doc.text(`Data: ${new Date(budget.created_at).toLocaleDateString('pt-BR')}`, 20, yPosition);
-      yPosition += 10;
-      
-      if (budget.delivery_date) {
-        doc.text(`Data de Entrega: ${new Date(budget.delivery_date).toLocaleDateString('pt-BR')}`, 20, yPosition);
-        yPosition += 10;
-      }
-      
-      doc.text(`Status: ${budget.status}`, 20, yPosition);
-      yPosition += 10;
-      
-      // Linha horizontal após dados do cliente
-      doc.setDrawColor(200, 200, 200);
-      doc.setLineWidth(0.5);
-      doc.line(20, yPosition, 190, yPosition);
-      yPosition += 10;
-      
-      // Items
-      doc.text('Itens:', 20, yPosition);
-      yPosition += 10;
-    }
-    
-    let total = 0;
-    
-    if (budget.orcamento_items && budget.orcamento_items.length > 0) {
-      budget.orcamento_items.forEach((item: any, index: number) => {
-        const subtotal = item.quantity * parseFloat(item.price);
-        total += subtotal;
-        
-        doc.text(`${item.quantity}x ${item.product_name} - R$ ${formatCurrency(subtotal)}`, 20, yPosition);
-        yPosition += 10;
-      });
-    }
-    
-    // Linha horizontal após os itens
-    yPosition += 5;
-    doc.setDrawColor(200, 200, 200);
-    doc.setLineWidth(0.5);
-    doc.line(20, yPosition, 190, yPosition);
-    
-    // Total
-    yPosition += 15;
-    doc.setFontSize(14);
-    doc.text(`Total: R$ ${formatCurrency(total)}`, 20, yPosition);
-    
-    // Save
-    const fileName = `orcamento_${budget.client_name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`;
+    // Salvar o PDF
+    const fileName = `orcamento_detalhado_${budget.client_name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`;
     doc.save(fileName);
   };
 
