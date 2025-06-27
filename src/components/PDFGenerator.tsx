@@ -1,4 +1,3 @@
-
 import { FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import jsPDF from 'jspdf';
@@ -26,6 +25,8 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
     const black = [0, 0, 0];
     const white = [255, 255, 255];
     const lightGray = [245, 245, 245];
+    const tableHeaderGreen = [0, 128, 128]; // Verde escuro para cabeçalho
+    const tableRowGray = [220, 220, 220]; // Cinza claro para linhas
     
     // Background branco
     doc.setFillColor(white[0], white[1], white[2]);
@@ -85,21 +86,46 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
     // Espaço antes da tabela
     yPos += 30;
     
-    // Cabeçalho da tabela com fundo escuro
-    doc.setFillColor(darkBlue[0], darkBlue[1], darkBlue[2]);
-    doc.rect(20, yPos, 170, 12, 'F');
+    // Dimensões da tabela
+    const tableStartX = 20;
+    const tableWidth = 170;
+    const rowHeight = 12;
+    
+    // Larguras das colunas baseadas na imagem
+    const colWidths = [25, 85, 30, 30]; // QUANT, ITEM/DESCRIÇÃO, UNIT, TOTAL
+    
+    // Cabeçalho da tabela com fundo verde escuro
+    doc.setFillColor(tableHeaderGreen[0], tableHeaderGreen[1], tableHeaderGreen[2]);
+    doc.rect(tableStartX, yPos, tableWidth, rowHeight, 'F');
+    
+    // Bordas do cabeçalho
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.5);
+    
+    // Linhas verticais do cabeçalho
+    let currentX = tableStartX;
+    for (let i = 0; i <= colWidths.length; i++) {
+      doc.line(currentX, yPos, currentX, yPos + rowHeight);
+      if (i < colWidths.length) currentX += colWidths[i];
+    }
+    
+    // Linhas horizontais do cabeçalho
+    doc.line(tableStartX, yPos, tableStartX + tableWidth, yPos);
+    doc.line(tableStartX, yPos + rowHeight, tableStartX + tableWidth, yPos + rowHeight);
     
     // Texto do cabeçalho da tabela
-    doc.setTextColor(cyanBlue[0], cyanBlue[1], cyanBlue[2]);
+    doc.setTextColor(white[0], white[1], white[2]);
     doc.setFontSize(10);
     doc.setFont(undefined, 'bold');
-    doc.text('QUANT', 30, yPos + 8);
-    doc.text('ITEM / DESCRIÇÃO', 70, yPos + 8);
-    doc.text('UNIT', 150, yPos + 8);
-    doc.text('TOTAL', 175, yPos + 8);
+    
+    // Posicionar texto centrado nas colunas
+    doc.text('QUANT', tableStartX + colWidths[0]/2, yPos + 8, { align: 'center' });
+    doc.text('ITEM / DESCRIÇÃO', tableStartX + colWidths[0] + colWidths[1]/2, yPos + 8, { align: 'center' });
+    doc.text('UNIT', tableStartX + colWidths[0] + colWidths[1] + colWidths[2]/2, yPos + 8, { align: 'center' });
+    doc.text('TOTAL', tableStartX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3]/2, yPos + 8, { align: 'center' });
     
     // Linhas da tabela
-    yPos += 12;
+    yPos += rowHeight;
     let totalGeral = 0;
     
     if (budget.orcamento_items && budget.orcamento_items.length > 0) {
@@ -107,46 +133,68 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
         const subtotal = item.quantity * parseFloat(item.price);
         totalGeral += subtotal;
         
-        // Fundo alternado para as linhas
-        if (index % 2 === 0) {
-          doc.setFillColor(lightGray[0], lightGray[1], lightGray[2]);
-          doc.rect(20, yPos, 170, 12, 'F');
+        // Fundo alternado para as linhas (cinza claro)
+        doc.setFillColor(tableRowGray[0], tableRowGray[1], tableRowGray[2]);
+        doc.rect(tableStartX, yPos, tableWidth, rowHeight, 'F');
+        
+        // Bordas da linha
+        doc.setDrawColor(0, 0, 0);
+        doc.setLineWidth(0.5);
+        
+        // Linhas verticais
+        currentX = tableStartX;
+        for (let i = 0; i <= colWidths.length; i++) {
+          doc.line(currentX, yPos, currentX, yPos + rowHeight);
+          if (i < colWidths.length) currentX += colWidths[i];
         }
         
-        // Bordas da tabela
-        doc.setDrawColor(200, 200, 200);
-        doc.rect(20, yPos, 170, 12);
+        // Linha horizontal inferior
+        doc.line(tableStartX, yPos + rowHeight, tableStartX + tableWidth, yPos + rowHeight);
         
         doc.setTextColor(black[0], black[1], black[2]);
         doc.setFontSize(9);
         doc.setFont(undefined, 'normal');
         
         // Quantidade centralizada
-        doc.text(String(item.quantity).padStart(2, '0'), 32, yPos + 8);
+        doc.text(String(item.quantity).padStart(2, '0'), tableStartX + colWidths[0]/2, yPos + 8, { align: 'center' });
         
-        // Nome do produto
-        doc.text(item.product_name, 25, yPos + 8);
+        // Nome do produto (alinhado à esquerda)
+        doc.text(item.product_name, tableStartX + colWidths[0] + 3, yPos + 8);
         
-        // Preço unitário
-        doc.text(`R$${formatCurrency(parseFloat(item.price))}`, 145, yPos + 8);
+        // Preço unitário (centralizado)
+        doc.text(`R$${formatCurrency(parseFloat(item.price))}`, tableStartX + colWidths[0] + colWidths[1] + colWidths[2]/2, yPos + 8, { align: 'center' });
         
-        // Total do item
-        doc.text(`R$${formatCurrency(subtotal)}`, 175, yPos + 8);
+        // Total do item (centralizado)
+        doc.text(`R$${formatCurrency(subtotal)}`, tableStartX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3]/2, yPos + 8, { align: 'center' });
         
-        yPos += 12;
+        yPos += rowHeight;
       });
     }
     
-    // Total final em destaque
-    yPos += 10;
+    // Linha do total final
+    yPos += 5;
+    
+    // Fundo da linha de total
+    doc.setFillColor(tableRowGray[0], tableRowGray[1], tableRowGray[2]);
+    doc.rect(tableStartX + colWidths[0] + colWidths[1], yPos, colWidths[2] + colWidths[3], rowHeight, 'F');
+    
+    // Bordas da linha de total
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.5);
+    doc.rect(tableStartX + colWidths[0] + colWidths[1], yPos, colWidths[2] + colWidths[3], rowHeight);
+    
+    // Linha vertical separando TOTAL: do valor
+    doc.line(tableStartX + colWidths[0] + colWidths[1] + colWidths[2], yPos, tableStartX + colWidths[0] + colWidths[1] + colWidths[2], yPos + rowHeight);
+    
+    // Texto do total
     doc.setTextColor(black[0], black[1], black[2]);
-    doc.setFontSize(12);
+    doc.setFontSize(10);
     doc.setFont(undefined, 'bold');
-    doc.text(`TOTAL :`, 140, yPos);
-    doc.text(`R$${formatCurrency(totalGeral)}`, 175, yPos);
+    doc.text('TOTAL :', tableStartX + colWidths[0] + colWidths[1] + colWidths[2]/2, yPos + 8, { align: 'center' });
+    doc.text(`R$${formatCurrency(totalGeral)}`, tableStartX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3]/2, yPos + 8, { align: 'center' });
     
     // Seção de condições de pagamento
-    yPos += 20;
+    yPos += 25;
     
     doc.setTextColor(black[0], black[1], black[2]);
     doc.setFontSize(10);
