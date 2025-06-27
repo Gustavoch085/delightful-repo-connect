@@ -20,65 +20,60 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
   const generatePDF = async () => {
     const doc = new jsPDF();
     
-    // Header com "orçamento detalhado" - reduzido para ficar alinhado
+    // Cabeçalho com logo da empresa (primeira imagem)
     try {
       const headerImg = new Image();
       headerImg.crossOrigin = "anonymous";
       
       await new Promise((resolve, reject) => {
         headerImg.onload = () => {
-          // Header "orçamento detalhado" - altura reduzida para 15
-          doc.addImage(headerImg, 'PNG', 20, 10, 170, 15);
+          // Logo da empresa no canto superior esquerdo
+          doc.addImage(headerImg, 'PNG', 20, 15, 50, 25);
           resolve(true);
         };
         headerImg.onerror = reject;
-        headerImg.src = '/lovable-uploads/16944181-86d9-4ae8-be5d-9b6782c41733.png';
+        headerImg.src = '/lovable-uploads/586eb785-4d5c-4a24-b468-92bfef4d56cb.png';
       });
     } catch (error) {
-      console.error('Erro ao carregar header:', error);
-      // Fallback: criar header com texto
-      doc.setFillColor(0, 0, 0);
-      doc.rect(20, 10, 170, 15, 'F');
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(16);
-      doc.text('orçamento detalhado', 105, 20, { align: 'center' });
+      console.error('Erro ao carregar logo da empresa:', error);
     }
+    
+    // Informações da empresa no cabeçalho
+    doc.setTextColor(0, 200, 200); // Cor ciano
+    doc.setFontSize(18);
+    doc.text('FORTAL SOLUÇÕES', 130, 25);
+    
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(10);
+    doc.text('CNPJ: 29.564.347/0001-49', 130, 32);
+    doc.text('RUA ERNESTO PEDRO DOS SANTOS, 66 - JOQUEI', 130, 38);
     
     // Encontrar dados do cliente
     const cliente = clientes.find(c => c.name === budget.client_name);
     
-    // Seção de informações do cliente
+    // Informações do cliente
+    doc.setTextColor(0, 200, 200); // Cor ciano
+    doc.setFontSize(14);
+    doc.text(budget.client_name?.toUpperCase() || '', 20, 65);
+    
     doc.setTextColor(0, 0, 0);
-    doc.setFontSize(12);
-    
-    // CLIENTE e TELEFONE (lado esquerdo) - na mesma linha
-    doc.text(`CLIENTE: ${budget.client_name || ''}`, 20, 40);
-    doc.text(`TELEFONE: ${cliente?.phone || ''}`, 20, 50);
-    
-    // ENDEREÇO e BAIRRO/CIDADE (lado direito) - na mesma linha
-    doc.text(`ENDEREÇO: ${cliente?.address || 'XXXXXX'}`, 120, 40);
-    doc.text(`BAIRRO/CIDADE: ${cliente?.cidade || 'FORTALEZA'}-CE`, 120, 50);
-    
-    // Linha horizontal separadora
-    doc.setDrawColor(0, 0, 0);
-    doc.setLineWidth(1);
-    doc.line(20, 65, 190, 65);
+    doc.setFontSize(10);
+    doc.text(`(${cliente?.phone || ''}) - ${budget.client_name || ''}`, 20, 72);
     
     // Cabeçalho da tabela
-    doc.setFillColor(0, 0, 0);
-    doc.rect(20, 75, 170, 15, 'F');
+    doc.setFillColor(0, 150, 150); // Cor ciano escuro
+    doc.rect(20, 85, 170, 12, 'F');
     
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(12);
-    doc.text('Nº', 25, 85);
-    doc.text('Descrição do Produto', 45, 85);
-    doc.text('Preço', 120, 85);
-    doc.text('Qt.', 150, 85);
-    doc.text('Total', 170, 85);
+    doc.text('QUANT', 30, 93);
+    doc.text('ITEM / DESCRIÇÃO', 70, 93);
+    doc.text('UNIT', 140, 93);
+    doc.text('TOTAL', 170, 93);
     
     // Itens da tabela
     doc.setTextColor(0, 0, 0);
-    let yPosition = 100;
+    let yPosition = 105;
     let totalGeral = 0;
     
     if (budget.orcamento_items && budget.orcamento_items.length > 0) {
@@ -86,74 +81,77 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
         const subtotal = item.quantity * parseFloat(item.price);
         totalGeral += subtotal;
         
-        // Número do item
-        doc.text((index + 1).toString(), 25, yPosition);
+        // Alternar cores das linhas
+        if (index % 2 === 0) {
+          doc.setFillColor(240, 240, 240);
+          doc.rect(20, yPosition - 5, 170, 12, 'F');
+        }
+        
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(10);
+        
+        // Quantidade (centralizada)
+        doc.text(String(item.quantity).padStart(2, '0'), 35, yPosition);
         
         // Nome do produto
-        doc.text(item.product_name, 45, yPosition);
+        doc.text(item.product_name, 25, yPosition);
         
         // Preço unitário
-        doc.text(`R$ ${formatCurrency(parseFloat(item.price))}`, 120, yPosition);
-        
-        // Quantidade
-        doc.text(item.quantity.toString(), 155, yPosition);
+        doc.text(`R$${formatCurrency(parseFloat(item.price))}`, 140, yPosition);
         
         // Total do item
-        doc.text(`R$ ${formatCurrency(subtotal)}`, 170, yPosition);
+        doc.text(`R$${formatCurrency(subtotal)}`, 170, yPosition);
         
-        yPosition += 15;
+        yPosition += 12;
       });
     }
     
-    // Espaçamento antes do total - reduzido
-    yPosition += 5;
-    
-    // Total final com fundo preto
-    doc.setFillColor(0, 0, 0);
-    doc.rect(150, yPosition - 5, 40, 15, 'F');
-    doc.setTextColor(255, 255, 255);
+    // Total final
+    yPosition += 10;
     doc.setFontSize(14);
-    doc.text(`R$ ${formatCurrency(totalGeral)}`, 170, yPosition + 5, { align: 'center' });
+    doc.setFont(undefined, 'bold');
+    doc.text(`TOTAL : R$${formatCurrency(totalGeral)}`, 150, yPosition);
     
-    // Informações adicionais - mais próximas
+    // Informações de pagamento
     yPosition += 20;
-    doc.setTextColor(0, 0, 0);
+    doc.setFont(undefined, 'normal');
     doc.setFontSize(10);
-    doc.text('Orçamento válido por: 15 dias', 20, yPosition);
-    doc.text('Pagamento de 50% no ato do fechamento, restante do valor', 20, yPosition + 8);
-    doc.text('na instalação do material.', 20, yPosition + 16);
+    doc.text('Formas de Pagamento:', 20, yPosition);
+    doc.text('50% Para início da produção / 50% Ao Concluir-Receber', 20, yPosition + 8);
     
-    // Logo e CNPJ no rodapé - logo mais centralizada
+    doc.text('Prazos:', 20, yPosition + 20);
+    doc.text('A Combinar', 20, yPosition + 28);
+    
+    doc.text('Logística:', 20, yPosition + 40);
+    doc.text('Instalado', 20, yPosition + 48);
+    
+    doc.text('Endereço de Instalação:', 20, yPosition + 60);
+    doc.text(`${cliente?.address || 'Av. III, 626, Jereissati I - Maracanaú'}`, 20, yPosition + 68);
+    
+    // Rodapé com informações da diretora e logo
+    doc.setFontSize(10);
+    doc.text('JENIFFER LEITE - (85) 98676.1518', 105, 250, { align: 'center' });
+    doc.text('DIRETORA COMERCIAL', 105, 258, { align: 'center' });
+    
+    // Logo no rodapé
     try {
       const logoImg = new Image();
       logoImg.crossOrigin = "anonymous";
       
       await new Promise((resolve, reject) => {
         logoImg.onload = () => {
-          // Logo mais centralizada - ajustando posição X para 85
-          doc.addImage(logoImg, 'PNG', 85, 250, 40, 20);
+          doc.addImage(logoImg, 'PNG', 95, 265, 20, 20);
           resolve(true);
         };
         logoImg.onerror = reject;
-        logoImg.src = '/lovable-uploads/35e55213-9712-49dd-a567-4fd516d25498.png';
+        logoImg.src = '/lovable-uploads/c3a950dc-98b6-4517-8005-7942f1bdbbf6.png';
       });
     } catch (error) {
-      console.error('Erro ao carregar logo:', error);
-      // Fallback: criar retângulo preto com "logo 1" mais centralizado
-      doc.setFillColor(0, 0, 0);
-      doc.rect(85, 250, 40, 20, 'F');
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(12);
-      doc.text('logo 1', 105, 262, { align: 'center' });
+      console.error('Erro ao carregar logo do rodapé:', error);
     }
     
-    // CNPJ no canto inferior direito
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(12);
-    doc.text('29.564.347.0001-49', 190, 270, { align: 'right' });
-    
     // Salvar o PDF
-    const fileName = `orcamento_detalhado_${budget.client_name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`;
+    const fileName = `orcamento_${budget.client_name.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`;
     doc.save(fileName);
   };
 
