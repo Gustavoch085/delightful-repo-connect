@@ -1,4 +1,3 @@
-
 import { FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import jsPDF from 'jspdf';
@@ -27,6 +26,7 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
     const white = [255, 255, 255];
     const lightGray = [245, 245, 245];
     const tableRowGray = [220, 220, 220]; // Cinza claro para linhas
+    const headerTextColor = [25, 255, 245]; // Nova cor para texto do cabeçalho #19fff5
     
     // Background branco
     doc.setFillColor(white[0], white[1], white[2]);
@@ -113,8 +113,8 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
     doc.line(tableStartX, yPos, tableStartX + tableWidth, yPos);
     doc.line(tableStartX, yPos + rowHeight, tableStartX + tableWidth, yPos + rowHeight);
     
-    // Texto do cabeçalho da tabela - mantendo azul
-    doc.setTextColor(cyanBlue[0], cyanBlue[1], cyanBlue[2]);
+    // Texto do cabeçalho da tabela - mudando para a nova cor #19fff5
+    doc.setTextColor(headerTextColor[0], headerTextColor[1], headerTextColor[2]);
     doc.setFontSize(10);
     doc.setFont(undefined, 'bold');
     
@@ -201,28 +201,28 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
     doc.setFont(undefined, 'bold');
     doc.text('Formas de Pagamento:', 20, yPos);
     
-    yPos += 4; // Reduzido de 6 para 4
+    yPos += 3; // Reduzido ainda mais de 4 para 3
     doc.setFont(undefined, 'normal');
     doc.text('50% Para início da produção / 50% Ao Concluir-Receber', 20, yPos);
     
-    yPos += 6; // Reduzido de 8 para 6
+    yPos += 5; // Reduzido ainda mais de 6 para 5
     doc.setFont(undefined, 'bold');
     doc.text('Prazos:', 20, yPos);
-    yPos += 4; // Reduzido de 6 para 4
+    yPos += 3; // Reduzido ainda mais de 4 para 3
     doc.setFont(undefined, 'normal');
     doc.text('A Combinar', 20, yPos);
     
-    yPos += 6; // Reduzido de 8 para 6
+    yPos += 5; // Reduzido ainda mais de 6 para 5
     doc.setFont(undefined, 'bold');
     doc.text('Logística:', 20, yPos);
-    yPos += 4; // Reduzido de 6 para 4
+    yPos += 3; // Reduzido ainda mais de 4 para 3
     doc.setFont(undefined, 'normal');
     doc.text('Instalado', 20, yPos);
     
-    yPos += 6; // Reduzido de 8 para 6
+    yPos += 5; // Reduzido ainda mais de 6 para 5
     doc.setFont(undefined, 'bold');
     doc.text('Endereço de Instalação:', 20, yPos);
-    yPos += 4; // Reduzido de 6 para 4
+    yPos += 3; // Reduzido ainda mais de 4 para 3
     doc.setFont(undefined, 'normal');
     doc.text(cliente?.address || 'Av. III, 626, Jereissati I - Maracanaú', 20, yPos);
     
