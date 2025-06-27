@@ -25,7 +25,6 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
     const black = [0, 0, 0];
     const white = [255, 255, 255];
     const lightGray = [245, 245, 245];
-    const tableHeaderGreen = [0, 128, 128]; // Verde escuro para cabeçalho
     const tableRowGray = [220, 220, 220]; // Cinza claro para linhas
     
     // Background branco
@@ -94,8 +93,8 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
     // Larguras das colunas baseadas na imagem
     const colWidths = [25, 85, 30, 30]; // QUANT, ITEM/DESCRIÇÃO, UNIT, TOTAL
     
-    // Cabeçalho da tabela com fundo verde escuro
-    doc.setFillColor(tableHeaderGreen[0], tableHeaderGreen[1], tableHeaderGreen[2]);
+    // Cabeçalho da tabela com fundo preto
+    doc.setFillColor(black[0], black[1], black[2]);
     doc.rect(tableStartX, yPos, tableWidth, rowHeight, 'F');
     
     // Bordas do cabeçalho - mudando para branco
@@ -113,7 +112,7 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
     doc.line(tableStartX, yPos, tableStartX + tableWidth, yPos);
     doc.line(tableStartX, yPos + rowHeight, tableStartX + tableWidth, yPos + rowHeight);
     
-    // Texto do cabeçalho da tabela - alterando para azul
+    // Texto do cabeçalho da tabela - mantendo azul
     doc.setTextColor(cyanBlue[0], cyanBlue[1], cyanBlue[2]);
     doc.setFontSize(10);
     doc.setFont(undefined, 'bold');
@@ -193,36 +192,36 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
     doc.text('TOTAL :', tableStartX + colWidths[0] + colWidths[1] + colWidths[2]/2, yPos + 8, { align: 'center' });
     doc.text(`R$${formatCurrency(totalGeral)}`, tableStartX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3]/2, yPos + 8, { align: 'center' });
     
-    // Seção de condições de pagamento - reduzindo espaçamentos
-    yPos += 20; // Reduzido de 25 para 20
+    // Seção de condições de pagamento - reduzindo ainda mais os espaçamentos
+    yPos += 15; // Reduzido de 20 para 15
     
     doc.setTextColor(black[0], black[1], black[2]);
     doc.setFontSize(10);
     doc.setFont(undefined, 'bold');
     doc.text('Formas de Pagamento:', 20, yPos);
     
-    yPos += 6; // Reduzido de 8 para 6
+    yPos += 4; // Reduzido de 6 para 4
     doc.setFont(undefined, 'normal');
     doc.text('50% Para início da produção / 50% Ao Concluir-Receber', 20, yPos);
     
-    yPos += 8; // Reduzido de 10 para 8
+    yPos += 6; // Reduzido de 8 para 6
     doc.setFont(undefined, 'bold');
     doc.text('Prazos:', 20, yPos);
-    yPos += 6; // Reduzido de 8 para 6
+    yPos += 4; // Reduzido de 6 para 4
     doc.setFont(undefined, 'normal');
     doc.text('A Combinar', 20, yPos);
     
-    yPos += 8; // Reduzido de 10 para 8
+    yPos += 6; // Reduzido de 8 para 6
     doc.setFont(undefined, 'bold');
     doc.text('Logística:', 20, yPos);
-    yPos += 6; // Reduzido de 8 para 6
+    yPos += 4; // Reduzido de 6 para 4
     doc.setFont(undefined, 'normal');
     doc.text('Instalado', 20, yPos);
     
-    yPos += 8; // Reduzido de 10 para 8
+    yPos += 6; // Reduzido de 8 para 6
     doc.setFont(undefined, 'bold');
     doc.text('Endereço de Instalação:', 20, yPos);
-    yPos += 6; // Reduzido de 8 para 6
+    yPos += 4; // Reduzido de 6 para 4
     doc.setFont(undefined, 'normal');
     doc.text(cliente?.address || 'Av. III, 626, Jereissati I - Maracanaú', 20, yPos);
     
