@@ -79,6 +79,12 @@ const rolePermissions = {
   ]
 };
 
+// Usuários específicos com permissões extras
+const userSpecificPermissions = {
+  'jenifferleite': ['relatorios', 'logs'],
+  'marcusvinicius': ['relatorios', 'logs']
+};
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -124,7 +130,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const hasPermission = (permission: string): boolean => {
     if (!user) return false;
-    return rolePermissions[user.role].includes(permission);
+    
+    // Verificar permissões do role
+    const rolePerms = rolePermissions[user.role] || [];
+    if (rolePerms.includes(permission)) {
+      return true;
+    }
+    
+    // Verificar permissões específicas do usuário
+    const foundUser = users.find(u => u.name === user.name);
+    if (foundUser && userSpecificPermissions[foundUser.username]) {
+      return userSpecificPermissions[foundUser.username].includes(permission);
+    }
+    
+    return false;
   };
 
   const isAuthenticated = !!user;
