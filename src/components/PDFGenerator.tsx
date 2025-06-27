@@ -51,38 +51,34 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(12);
     
-    // CLIENTE e TELEFONE (lado esquerdo)
-    doc.text('CLIENTE:', 20, 40);
-    doc.text(budget.client_name || '', 20, 50);
-    doc.text('TELEFONE:', 20, 60);
-    doc.text(cliente?.telefone || '', 20, 70);
+    // CLIENTE e TELEFONE (lado esquerdo) - na mesma linha
+    doc.text(`CLIENTE: ${budget.client_name || ''}`, 20, 40);
+    doc.text(`TELEFONE: ${cliente?.phone || ''}`, 20, 50);
     
-    // ENDEREÇO e BAIRRO/CIDADE (lado direito)
-    doc.text('ENDEREÇO:', 120, 40);
-    doc.text(cliente?.endereco || 'XXXXXX', 120, 50);
-    doc.text('BAIRRO/CIDADE:', 120, 60);
-    doc.text(`${cliente?.cidade || 'FORTALEZA'}-CE`, 120, 70);
+    // ENDEREÇO e BAIRRO/CIDADE (lado direito) - na mesma linha
+    doc.text(`ENDEREÇO: ${cliente?.address || 'XXXXXX'}`, 120, 40);
+    doc.text(`BAIRRO/CIDADE: ${cliente?.cidade || 'FORTALEZA'}-CE`, 120, 50);
     
     // Linha horizontal separadora
     doc.setDrawColor(0, 0, 0);
     doc.setLineWidth(1);
-    doc.line(20, 80, 190, 80);
+    doc.line(20, 65, 190, 65);
     
     // Cabeçalho da tabela
     doc.setFillColor(0, 0, 0);
-    doc.rect(20, 90, 170, 15, 'F');
+    doc.rect(20, 75, 170, 15, 'F');
     
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(12);
-    doc.text('Nº', 25, 100);
-    doc.text('Descrição do Produto', 45, 100);
-    doc.text('Preço', 120, 100);
-    doc.text('Qt.', 150, 100);
-    doc.text('Total', 170, 100);
+    doc.text('Nº', 25, 85);
+    doc.text('Descrição do Produto', 45, 85);
+    doc.text('Preço', 120, 85);
+    doc.text('Qt.', 150, 85);
+    doc.text('Total', 170, 85);
     
     // Itens da tabela
     doc.setTextColor(0, 0, 0);
-    let yPosition = 115;
+    let yPosition = 100;
     let totalGeral = 0;
     
     if (budget.orcamento_items && budget.orcamento_items.length > 0) {
@@ -127,15 +123,15 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
     doc.text('Pagamento de 50% no ato do fechamento, restante do valor', 20, yPosition + 8);
     doc.text('na instalação do material.', 20, yPosition + 16);
     
-    // Logo e CNPJ no rodapé - logo menor e centralizada
+    // Logo e CNPJ no rodapé - logo mais centralizada
     try {
       const logoImg = new Image();
       logoImg.crossOrigin = "anonymous";
       
       await new Promise((resolve, reject) => {
         logoImg.onload = () => {
-          // Logo centralizada e menor
-          doc.addImage(logoImg, 'PNG', 75, 250, 40, 20);
+          // Logo mais centralizada - ajustando posição X para 85
+          doc.addImage(logoImg, 'PNG', 85, 250, 40, 20);
           resolve(true);
         };
         logoImg.onerror = reject;
@@ -143,12 +139,12 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
       });
     } catch (error) {
       console.error('Erro ao carregar logo:', error);
-      // Fallback: criar retângulo preto com "logo 1" centralizado
+      // Fallback: criar retângulo preto com "logo 1" mais centralizado
       doc.setFillColor(0, 0, 0);
-      doc.rect(75, 250, 40, 20, 'F');
+      doc.rect(85, 250, 40, 20, 'F');
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(12);
-      doc.text('logo 1', 95, 262, { align: 'center' });
+      doc.text('logo 1', 105, 262, { align: 'center' });
     }
     
     // CNPJ no canto inferior direito
