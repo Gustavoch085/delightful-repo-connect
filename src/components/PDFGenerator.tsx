@@ -113,8 +113,8 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
     doc.line(tableStartX, yPos, tableStartX + tableWidth, yPos);
     doc.line(tableStartX, yPos + rowHeight, tableStartX + tableWidth, yPos + rowHeight);
     
-    // Texto do cabeçalho da tabela
-    doc.setTextColor(white[0], white[1], white[2]);
+    // Texto do cabeçalho da tabela - alterando para azul
+    doc.setTextColor(cyanBlue[0], cyanBlue[1], cyanBlue[2]);
     doc.setFontSize(10);
     doc.setFont(undefined, 'bold');
     
@@ -193,36 +193,36 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
     doc.text('TOTAL :', tableStartX + colWidths[0] + colWidths[1] + colWidths[2]/2, yPos + 8, { align: 'center' });
     doc.text(`R$${formatCurrency(totalGeral)}`, tableStartX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3]/2, yPos + 8, { align: 'center' });
     
-    // Seção de condições de pagamento
-    yPos += 25;
+    // Seção de condições de pagamento - reduzindo espaçamentos
+    yPos += 20; // Reduzido de 25 para 20
     
     doc.setTextColor(black[0], black[1], black[2]);
     doc.setFontSize(10);
     doc.setFont(undefined, 'bold');
     doc.text('Formas de Pagamento:', 20, yPos);
     
-    yPos += 8;
+    yPos += 6; // Reduzido de 8 para 6
     doc.setFont(undefined, 'normal');
     doc.text('50% Para início da produção / 50% Ao Concluir-Receber', 20, yPos);
     
-    yPos += 10;
+    yPos += 8; // Reduzido de 10 para 8
     doc.setFont(undefined, 'bold');
     doc.text('Prazos:', 20, yPos);
-    yPos += 8;
+    yPos += 6; // Reduzido de 8 para 6
     doc.setFont(undefined, 'normal');
     doc.text('A Combinar', 20, yPos);
     
-    yPos += 10;
+    yPos += 8; // Reduzido de 10 para 8
     doc.setFont(undefined, 'bold');
     doc.text('Logística:', 20, yPos);
-    yPos += 8;
+    yPos += 6; // Reduzido de 8 para 6
     doc.setFont(undefined, 'normal');
     doc.text('Instalado', 20, yPos);
     
-    yPos += 10;
+    yPos += 8; // Reduzido de 10 para 8
     doc.setFont(undefined, 'bold');
     doc.text('Endereço de Instalação:', 20, yPos);
-    yPos += 8;
+    yPos += 6; // Reduzido de 8 para 6
     doc.setFont(undefined, 'normal');
     doc.text(cliente?.address || 'Av. III, 626, Jereissati I - Maracanaú', 20, yPos);
     
@@ -245,14 +245,15 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
     doc.setFont(undefined, 'bold');
     doc.text('DIRETORA COMERCIAL', 105, footerY + 28, { align: 'center' });
     
-    // Logo centralizada no rodapé
+    // Logo centralizada no rodapé - diminuindo o tamanho
     try {
       const footerLogoImg = new Image();
       footerLogoImg.crossOrigin = "anonymous";
       
       await new Promise((resolve, reject) => {
         footerLogoImg.onload = () => {
-          doc.addImage(footerLogoImg, 'PNG', 95, footerY + 35, 20, 15);
+          // Diminuindo o tamanho da logo de 20x15 para 15x11
+          doc.addImage(footerLogoImg, 'PNG', 97.5, footerY + 35, 15, 11);
           resolve(true);
         };
         footerLogoImg.onerror = reject;
