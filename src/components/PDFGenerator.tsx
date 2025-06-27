@@ -1,5 +1,3 @@
-
-
 import { FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import jsPDF from 'jspdf';
@@ -169,74 +167,55 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
     doc.text('TOTAL :', tableStartX + colWidths[0] + colWidths[1] + colWidths[2]/2, yPos + 8, { align: 'center' });
     doc.text(`R$${formatCurrency(totalGeral)}`, tableStartX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3]/2, yPos + 8, { align: 'center' });
     
-    // Seção de condições de pagamento - reduzindo ainda mais os espaçamentos
-    yPos += 15; // Reduzido de 20 para 15
+    // Seção de condições de pagamento - ajustando os espaçamentos
+    yPos += 20;
     
     doc.setTextColor(black[0], black[1], black[2]);
     doc.setFontSize(10);
     doc.setFont(undefined, 'bold');
     doc.text('Formas de Pagamento:', 20, yPos);
     
-    yPos += 3; // Reduzido ainda mais de 4 para 3
+    yPos += 6; // Espaçamento entre título e conteúdo
     doc.setFont(undefined, 'normal');
     doc.text('50% Para início da produção / 50% Ao Concluir-Receber', 20, yPos);
     
-    yPos += 5; // Reduzido ainda mais de 6 para 5
+    yPos += 12; // Espaçamento entre seções
     doc.setFont(undefined, 'bold');
     doc.text('Prazos:', 20, yPos);
-    yPos += 3; // Reduzido ainda mais de 4 para 3
+    yPos += 6; // Espaçamento entre título e conteúdo
     doc.setFont(undefined, 'normal');
     doc.text('A Combinar', 20, yPos);
     
-    yPos += 5; // Reduzido ainda mais de 6 para 5
+    yPos += 12; // Espaçamento entre seções
     doc.setFont(undefined, 'bold');
     doc.text('Logística:', 20, yPos);
-    yPos += 3; // Reduzido ainda mais de 4 para 3
+    yPos += 6; // Espaçamento entre título e conteúdo
     doc.setFont(undefined, 'normal');
     doc.text('Instalado', 20, yPos);
     
-    yPos += 5; // Reduzido ainda mais de 6 para 5
+    yPos += 12; // Espaçamento entre seções
     doc.setFont(undefined, 'bold');
     doc.text('Endereço de Instalação:', 20, yPos);
-    yPos += 3; // Reduzido ainda mais de 4 para 3
+    yPos += 6; // Espaçamento entre título e conteúdo
     doc.setFont(undefined, 'normal');
     doc.text(cliente?.address || 'Av. III, 626, Jereissati I - Maracanaú', 20, yPos);
     
-    // Elementos geométricos no rodapé
-    const footerY = 250;
-    
-    // Triângulo preto inferior direito
-    doc.setFillColor(black[0], black[1], black[2]);
-    doc.triangle(210, 297, 210, 250, 160, 297, 'F');
-    
-    // Triângulo ciano no canto inferior direito
-    doc.setFillColor(cyanBlue[0], cyanBlue[1], cyanBlue[2]);
-    doc.triangle(210, 297, 190, 297, 210, 277, 'F');
-    
-    // Informações da diretora comercial centralizadas
-    doc.setTextColor(black[0], black[1], black[2]);
-    doc.setFontSize(10);
-    doc.setFont(undefined, 'normal');
-    doc.text('JENIFFER LEITE - (85) 98676.1518', 105, footerY + 20, { align: 'center' });
-    doc.setFont(undefined, 'bold');
-    doc.text('DIRETORA COMERCIAL', 105, footerY + 28, { align: 'center' });
-    
-    // Logo centralizada no rodapé - diminuindo o tamanho
+    // Nova imagem do rodapé ocupando toda a largura
     try {
-      const footerLogoImg = new Image();
-      footerLogoImg.crossOrigin = "anonymous";
+      const footerImg = new Image();
+      footerImg.crossOrigin = "anonymous";
       
       await new Promise((resolve, reject) => {
-        footerLogoImg.onload = () => {
-          // Diminuindo o tamanho da logo de 20x15 para 15x11
-          doc.addImage(footerLogoImg, 'PNG', 97.5, footerY + 35, 15, 11);
+        footerImg.onload = () => {
+          // Adicionar imagem do rodapé ocupando toda a largura na parte inferior
+          doc.addImage(footerImg, 'PNG', 0, 220, 210, 77);
           resolve(true);
         };
-        footerLogoImg.onerror = reject;
-        footerLogoImg.src = '/lovable-uploads/c3a950dc-98b6-4517-8005-7942f1bdbbf6.png';
+        footerImg.onerror = reject;
+        footerImg.src = '/lovable-uploads/78afa8c5-b443-4e20-bdc9-c8265b303094.png';
       });
     } catch (error) {
-      console.error('Erro ao carregar logo do rodapé:', error);
+      console.error('Erro ao carregar imagem do rodapé:', error);
     }
     
     // Salvar o PDF
@@ -257,4 +236,3 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
     </Button>
   );
 }
-
