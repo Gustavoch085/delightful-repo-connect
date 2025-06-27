@@ -20,15 +20,15 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
   const generatePDF = async () => {
     const doc = new jsPDF();
     
-    // Header com "orçamento detalhado"
+    // Header com "orçamento detalhado" - reduzido para ficar alinhado
     try {
       const headerImg = new Image();
       headerImg.crossOrigin = "anonymous";
       
       await new Promise((resolve, reject) => {
         headerImg.onload = () => {
-          // Header "orçamento detalhado" - largura total
-          doc.addImage(headerImg, 'PNG', 0, 0, 210, 20);
+          // Header "orçamento detalhado" - altura reduzida para 15
+          doc.addImage(headerImg, 'PNG', 20, 10, 170, 15);
           resolve(true);
         };
         headerImg.onerror = reject;
@@ -38,10 +38,10 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
       console.error('Erro ao carregar header:', error);
       // Fallback: criar header com texto
       doc.setFillColor(0, 0, 0);
-      doc.rect(0, 0, 210, 20, 'F');
+      doc.rect(20, 10, 170, 15, 'F');
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(16);
-      doc.text('orçamento detalhado', 105, 12, { align: 'center' });
+      doc.text('orçamento detalhado', 105, 20, { align: 'center' });
     }
     
     // Encontrar dados do cliente
@@ -109,8 +109,8 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
       });
     }
     
-    // Espaçamento antes do total
-    yPosition += 10;
+    // Espaçamento antes do total - reduzido
+    yPosition += 5;
     
     // Total final com fundo preto
     doc.setFillColor(0, 0, 0);
@@ -119,23 +119,23 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
     doc.setFontSize(14);
     doc.text(`R$ ${formatCurrency(totalGeral)}`, 170, yPosition + 5, { align: 'center' });
     
-    // Informações adicionais
-    yPosition += 30;
+    // Informações adicionais - mais próximas
+    yPosition += 20;
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(10);
     doc.text('Orçamento válido por: 15 dias', 20, yPosition);
-    doc.text('Pagamento de 50% no ato do fechamento, restante do valor', 20, yPosition + 10);
-    doc.text('na instalação do material.', 20, yPosition + 20);
+    doc.text('Pagamento de 50% no ato do fechamento, restante do valor', 20, yPosition + 8);
+    doc.text('na instalação do material.', 20, yPosition + 16);
     
-    // Logo e CNPJ no rodapé
+    // Logo e CNPJ no rodapé - logo menor e centralizada
     try {
       const logoImg = new Image();
       logoImg.crossOrigin = "anonymous";
       
       await new Promise((resolve, reject) => {
         logoImg.onload = () => {
-          // Logo no canto inferior esquerdo
-          doc.addImage(logoImg, 'PNG', 20, 250, 60, 30);
+          // Logo centralizada e menor
+          doc.addImage(logoImg, 'PNG', 75, 250, 40, 20);
           resolve(true);
         };
         logoImg.onerror = reject;
@@ -143,12 +143,12 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
       });
     } catch (error) {
       console.error('Erro ao carregar logo:', error);
-      // Fallback: criar retângulo preto com "logo 1"
+      // Fallback: criar retângulo preto com "logo 1" centralizado
       doc.setFillColor(0, 0, 0);
-      doc.rect(20, 250, 60, 30, 'F');
+      doc.rect(75, 250, 40, 20, 'F');
       doc.setTextColor(255, 255, 255);
-      doc.setFontSize(16);
-      doc.text('logo 1', 50, 270, { align: 'center' });
+      doc.setFontSize(12);
+      doc.text('logo 1', 95, 262, { align: 'center' });
     }
     
     // CNPJ no canto inferior direito
