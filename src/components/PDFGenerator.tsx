@@ -1,4 +1,5 @@
 
+
 import { FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import jsPDF from 'jspdf';
@@ -37,55 +38,29 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
     doc.setFillColor(black[0], black[1], black[2]);
     doc.triangle(0, 0, 0, 40, 40, 0, 'F');
     
-    // Logo da empresa no canto superior esquerdo
+    // Nova imagem do cabeçalho ocupando toda a largura
     try {
-      const logoImg = new Image();
-      logoImg.crossOrigin = "anonymous";
+      const headerImg = new Image();
+      headerImg.crossOrigin = "anonymous";
       
       await new Promise((resolve, reject) => {
-        logoImg.onload = () => {
-          doc.addImage(logoImg, 'PNG', 15, 15, 30, 20);
+        headerImg.onload = () => {
+          // Adicionar imagem ocupando toda a largura (210mm) e altura proporcional
+          doc.addImage(headerImg, 'PNG', 0, 15, 210, 60);
           resolve(true);
         };
-        logoImg.onerror = reject;
-        logoImg.src = '/lovable-uploads/586eb785-4d5c-4a24-b468-92bfef4d56cb.png';
+        headerImg.onerror = reject;
+        headerImg.src = '/lovable-uploads/f8f1f6c6-463a-4380-8f7a-ade48cfda7bc.png';
       });
     } catch (error) {
-      console.error('Erro ao carregar logo da empresa:', error);
+      console.error('Erro ao carregar imagem do cabeçalho:', error);
     }
     
     // Encontrar dados do cliente
     const cliente = clientes.find(c => c.name === budget.client_name);
     
-    // Nome do cliente no cabeçalho direito (no lugar de "FORTAL SOLUÇÕES")
-    doc.setTextColor(cyanBlue[0], cyanBlue[1], cyanBlue[2]);
-    doc.setFontSize(20);
-    doc.setFont(undefined, 'bold');
-    doc.text(budget.client_name?.toUpperCase() || 'CLIENTE', 130, 25);
-    
-    // Telefone do cliente (no lugar das informações da empresa)
-    doc.setTextColor(black[0], black[1], black[2]);
-    doc.setFontSize(10);
-    doc.setFont(undefined, 'normal');
-    doc.text(`Telefone: ${cliente?.phone || '(85) 00000-0000'}`, 130, 35);
-    doc.text('RUA ERNESTO PEDRO DOS SANTOS, 66 - JOQUEI', 130, 42);
-    
-    // Seção da empresa (posicionada à esquerda)
-    let yPos = 80;
-    doc.setTextColor(cyanBlue[0], cyanBlue[1], cyanBlue[2]);
-    doc.setFontSize(16);
-    doc.setFont(undefined, 'bold');
-    doc.text('FORTAL SOLUÇÕES', 20, yPos);
-    
-    // CNPJ da empresa
-    yPos += 10;
-    doc.setTextColor(black[0], black[1], black[2]);
-    doc.setFontSize(10);
-    doc.setFont(undefined, 'normal');
-    doc.text('CNPJ: 29.564.347/0001-49', 20, yPos);
-    
-    // Espaço antes da tabela
-    yPos += 30;
+    // Espaço antes da tabela (ajustado para dar espaço para a nova imagem)
+    let yPos = 90;
     
     // Dimensões da tabela
     const tableStartX = 20;
@@ -114,7 +89,7 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
     doc.line(tableStartX, yPos, tableStartX + tableWidth, yPos);
     doc.line(tableStartX, yPos + rowHeight, tableStartX + tableWidth, yPos + rowHeight);
     
-    // Texto do cabeçalho da tabela - mudando para a nova cor #19fff5
+    // Texto do cabeçalho da tabela - cor #19fff5
     doc.setTextColor(headerTextColor[0], headerTextColor[1], headerTextColor[2]);
     doc.setFontSize(10);
     doc.setFont(undefined, 'bold');
@@ -282,3 +257,4 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
     </Button>
   );
 }
+
