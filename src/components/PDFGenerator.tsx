@@ -1,3 +1,4 @@
+
 import { FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import jsPDF from 'jspdf';
@@ -69,14 +70,14 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
     doc.text(`Telefone: ${cliente?.phone || '(85) 00000-0000'}`, 130, 35);
     doc.text('RUA ERNESTO PEDRO DOS SANTOS, 66 - JOQUEI', 130, 42);
     
-    // Seção do cliente (posicionada à esquerda) - removida já que está no cabeçalho
+    // Seção da empresa (posicionada à esquerda)
     let yPos = 80;
     doc.setTextColor(cyanBlue[0], cyanBlue[1], cyanBlue[2]);
     doc.setFontSize(16);
     doc.setFont(undefined, 'bold');
     doc.text('FORTAL SOLUÇÕES', 20, yPos);
     
-    // Informações da empresa no local do cliente
+    // CNPJ da empresa
     yPos += 10;
     doc.setTextColor(black[0], black[1], black[2]);
     doc.setFontSize(10);
