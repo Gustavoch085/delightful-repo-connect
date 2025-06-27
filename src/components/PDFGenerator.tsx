@@ -20,109 +20,86 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
   const generatePDF = async () => {
     const doc = new jsPDF();
     
-    // Configurar cores
-    const primaryBlue = [41, 128, 185]; // Azul principal
-    const darkBlue = [52, 73, 94]; // Azul escuro
-    const lightGray = [236, 240, 241]; // Cinza claro
+    // Cores do design
+    const cyanBlue = [0, 200, 255]; // Azul ciano principal
+    const darkBlue = [0, 51, 102]; // Azul escuro
+    const black = [0, 0, 0];
+    const white = [255, 255, 255];
+    const lightGray = [245, 245, 245];
     
-    // Cabeçalho com fundo azul
-    doc.setFillColor(primaryBlue[0], primaryBlue[1], primaryBlue[2]);
-    doc.rect(0, 0, 210, 60, 'F');
+    // Background branco
+    doc.setFillColor(white[0], white[1], white[2]);
+    doc.rect(0, 0, 210, 297, 'F');
     
-    // Logo da empresa no cabeçalho
+    // Elemento geométrico superior esquerdo (triângulo preto)
+    doc.setFillColor(black[0], black[1], black[2]);
+    doc.triangle(0, 0, 0, 40, 40, 0, 'F');
+    
+    // Logo da empresa no canto superior esquerdo
     try {
-      const headerImg = new Image();
-      headerImg.crossOrigin = "anonymous";
+      const logoImg = new Image();
+      logoImg.crossOrigin = "anonymous";
       
       await new Promise((resolve, reject) => {
-        headerImg.onload = () => {
-          doc.addImage(headerImg, 'PNG', 15, 15, 40, 30);
+        logoImg.onload = () => {
+          doc.addImage(logoImg, 'PNG', 15, 15, 30, 20);
           resolve(true);
         };
-        headerImg.onerror = reject;
-        headerImg.src = '/lovable-uploads/586eb785-4d5c-4a24-b468-92bfef4d56cb.png';
+        logoImg.onerror = reject;
+        logoImg.src = '/lovable-uploads/586eb785-4d5c-4a24-b468-92bfef4d56cb.png';
       });
     } catch (error) {
       console.error('Erro ao carregar logo da empresa:', error);
     }
     
-    // Informações da empresa no cabeçalho (lado direito)
-    doc.setTextColor(255, 255, 255);
+    // Título "FORTAL SOLUÇÕES" no cabeçalho direito
+    doc.setTextColor(cyanBlue[0], cyanBlue[1], cyanBlue[2]);
     doc.setFontSize(20);
     doc.setFont(undefined, 'bold');
     doc.text('FORTAL SOLUÇÕES', 130, 25);
     
+    // Informações da empresa
+    doc.setTextColor(black[0], black[1], black[2]);
     doc.setFontSize(10);
     doc.setFont(undefined, 'normal');
-    doc.text('CNPJ: 29.564.347/0001-49', 130, 33);
-    doc.text('RUA ERNESTO PEDRO DOS SANTOS, 66 - JOQUEI', 130, 40);
-    doc.text('MARACANAÚ - CE', 130, 47);
-    
-    // Título "ORÇAMENTO" centralizado
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(24);
-    doc.setFont(undefined, 'bold');
-    doc.text('ORÇAMENTO', 105, 80, { align: 'center' });
+    doc.text('CNPJ: 29.564.347/0001-49', 130, 35);
+    doc.text('RUA ERNESTO PEDRO DOS SANTOS, 66 - JOQUEI', 130, 42);
     
     // Encontrar dados do cliente
     const cliente = clientes.find(c => c.name === budget.client_name);
     
-    // Seção de informações do cliente
-    let yPos = 100;
-    
-    // Cliente
-    doc.setFontSize(12);
+    // Seção do cliente (posicionada à esquerda)
+    let yPos = 80;
+    doc.setTextColor(cyanBlue[0], cyanBlue[1], cyanBlue[2]);
+    doc.setFontSize(16);
     doc.setFont(undefined, 'bold');
-    doc.setTextColor(darkBlue[0], darkBlue[1], darkBlue[2]);
-    doc.text('CLIENTE:', 20, yPos);
-    doc.setFont(undefined, 'normal');
-    doc.setTextColor(0, 0, 0);
-    doc.text(budget.client_name?.toUpperCase() || '', 45, yPos);
+    doc.text(budget.client_name?.toUpperCase() || 'CLIENTE', 20, yPos);
     
-    // Telefone
-    yPos += 8;
-    doc.setFont(undefined, 'bold');
-    doc.setTextColor(darkBlue[0], darkBlue[1], darkBlue[2]);
-    doc.text('TELEFONE:', 20, yPos);
+    // Telefone do cliente
+    yPos += 10;
+    doc.setTextColor(black[0], black[1], black[2]);
+    doc.setFontSize(10);
     doc.setFont(undefined, 'normal');
-    doc.setTextColor(0, 0, 0);
-    doc.text(cliente?.phone || '', 50, yPos);
-    
-    // Endereço
-    yPos += 8;
-    doc.setFont(undefined, 'bold');
-    doc.setTextColor(darkBlue[0], darkBlue[1], darkBlue[2]);
-    doc.text('ENDEREÇO:', 20, yPos);
-    doc.setFont(undefined, 'normal');
-    doc.setTextColor(0, 0, 0);
-    doc.text(cliente?.address || '', 50, yPos);
-    
-    // Bairro/Cidade
-    yPos += 8;
-    doc.setFont(undefined, 'bold');
-    doc.setTextColor(darkBlue[0], darkBlue[1], darkBlue[2]);
-    doc.text('BAIRRO:', 20, yPos);
-    doc.setFont(undefined, 'normal');
-    doc.setTextColor(0, 0, 0);
-    doc.text(cliente?.cidade || '', 43, yPos);
+    doc.text(`(${cliente?.phone || '85) 00000-0000'}) - ${budget.client_name || 'Cliente'}`, 20, yPos);
     
     // Espaço antes da tabela
-    yPos += 20;
+    yPos += 30;
     
-    // Cabeçalho da tabela
+    // Cabeçalho da tabela com fundo escuro
     doc.setFillColor(darkBlue[0], darkBlue[1], darkBlue[2]);
-    doc.rect(20, yPos, 170, 10, 'F');
+    doc.rect(20, yPos, 170, 12, 'F');
     
-    doc.setTextColor(255, 255, 255);
+    // Texto do cabeçalho da tabela
+    doc.setTextColor(cyanBlue[0], cyanBlue[1], cyanBlue[2]);
     doc.setFontSize(10);
     doc.setFont(undefined, 'bold');
-    doc.text('QUANT', 25, yPos + 7);
-    doc.text('ITEM / DESCRIÇÃO', 50, yPos + 7);
-    doc.text('UNIT', 140, yPos + 7);
-    doc.text('TOTAL', 170, yPos + 7);
+    doc.text('QUANT', 30, yPos + 8);
+    doc.text('ITEM / DESCRIÇÃO', 70, yPos + 8);
+    doc.text('UNIT', 150, yPos + 8);
+    doc.text('TOTAL', 175, yPos + 8);
     
-    // Itens da tabela
-    yPos += 10;
+    // Linhas da tabela
+    yPos += 12;
     let totalGeral = 0;
     
     if (budget.orcamento_items && budget.orcamento_items.length > 0) {
@@ -130,102 +107,108 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
         const subtotal = item.quantity * parseFloat(item.price);
         totalGeral += subtotal;
         
-        // Alternar cores das linhas
+        // Fundo alternado para as linhas
         if (index % 2 === 0) {
           doc.setFillColor(lightGray[0], lightGray[1], lightGray[2]);
-          doc.rect(20, yPos, 170, 10, 'F');
+          doc.rect(20, yPos, 170, 12, 'F');
         }
         
-        doc.setTextColor(0, 0, 0);
+        // Bordas da tabela
+        doc.setDrawColor(200, 200, 200);
+        doc.rect(20, yPos, 170, 12);
+        
+        doc.setTextColor(black[0], black[1], black[2]);
         doc.setFontSize(9);
         doc.setFont(undefined, 'normal');
         
-        // Quantidade (centralizada)
-        doc.text(String(item.quantity).padStart(2, '0'), 28, yPos + 7);
+        // Quantidade centralizada
+        doc.text(String(item.quantity).padStart(2, '0'), 32, yPos + 8);
         
         // Nome do produto
-        doc.text(item.product_name, 25, yPos + 7);
+        doc.text(item.product_name, 25, yPos + 8);
         
-        // Preço unitário (alinhado à direita)
-        doc.text(`R$ ${formatCurrency(parseFloat(item.price))}`, 155, yPos + 7, { align: 'right' });
+        // Preço unitário
+        doc.text(`R$${formatCurrency(parseFloat(item.price))}`, 145, yPos + 8);
         
-        // Total do item (alinhado à direita)
-        doc.text(`R$ ${formatCurrency(subtotal)}`, 185, yPos + 7, { align: 'right' });
+        // Total do item
+        doc.text(`R$${formatCurrency(subtotal)}`, 175, yPos + 8);
         
-        yPos += 10;
+        yPos += 12;
       });
     }
     
-    // Linha de separação
-    doc.setDrawColor(200, 200, 200);
-    doc.line(20, yPos, 190, yPos);
-    
-    // Total final
-    yPos += 15;
-    doc.setFillColor(darkBlue[0], darkBlue[1], darkBlue[2]);
-    doc.rect(130, yPos - 5, 60, 12, 'F');
-    
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(14);
-    doc.setFont(undefined, 'bold');
-    doc.text(`TOTAL: R$ ${formatCurrency(totalGeral)}`, 160, yPos + 3, { align: 'center' });
-    
-    // Seção de condições
-    yPos += 30;
-    
-    // Título das condições
-    doc.setTextColor(darkBlue[0], darkBlue[1], darkBlue[2]);
+    // Total final em destaque
+    yPos += 10;
+    doc.setTextColor(black[0], black[1], black[2]);
     doc.setFontSize(12);
     doc.setFont(undefined, 'bold');
-    doc.text('CONDIÇÕES:', 20, yPos);
+    doc.text(`TOTAL :`, 140, yPos);
+    doc.text(`R$${formatCurrency(totalGeral)}`, 175, yPos);
     
-    // Informações de pagamento
-    yPos += 12;
-    doc.setTextColor(0, 0, 0);
+    // Seção de condições de pagamento
+    yPos += 20;
+    
+    doc.setTextColor(black[0], black[1], black[2]);
     doc.setFontSize(10);
-    doc.setFont(undefined, 'normal');
-    doc.text('• Formas de Pagamento: 50% Para início da produção / 50% Ao Concluir-Receber', 25, yPos);
-    
-    yPos += 8;
-    doc.text('• Prazos: A Combinar', 25, yPos);
-    
-    yPos += 8;
-    doc.text('• Logística: Instalado', 25, yPos);
-    
-    yPos += 8;
-    doc.text(`• Endereço de Instalação: ${cliente?.address || 'A definir'}`, 25, yPos);
-    
-    yPos += 12;
     doc.setFont(undefined, 'bold');
-    doc.text('• Orçamento válido por 15 dias', 25, yPos);
-    doc.text('• Pagamento de 50% no ato do fechamento e 50% na entrega', 25, yPos + 8);
+    doc.text('Formas de Pagamento:', 20, yPos);
     
-    // Rodapé com informações da diretora
+    yPos += 8;
+    doc.setFont(undefined, 'normal');
+    doc.text('50% Para início da produção / 50% Ao Concluir-Receber', 20, yPos);
+    
+    yPos += 10;
+    doc.setFont(undefined, 'bold');
+    doc.text('Prazos:', 20, yPos);
+    yPos += 8;
+    doc.setFont(undefined, 'normal');
+    doc.text('A Combinar', 20, yPos);
+    
+    yPos += 10;
+    doc.setFont(undefined, 'bold');
+    doc.text('Logística:', 20, yPos);
+    yPos += 8;
+    doc.setFont(undefined, 'normal');
+    doc.text('Instalado', 20, yPos);
+    
+    yPos += 10;
+    doc.setFont(undefined, 'bold');
+    doc.text('Endereço de Instalação:', 20, yPos);
+    yPos += 8;
+    doc.setFont(undefined, 'normal');
+    doc.text(cliente?.address || 'Av. III, 626, Jereissati I - Maracanaú', 20, yPos);
+    
+    // Elementos geométricos no rodapé
     const footerY = 250;
     
-    // Linha separadora
-    doc.setDrawColor(darkBlue[0], darkBlue[1], darkBlue[2]);
-    doc.line(20, footerY, 190, footerY);
+    // Triângulo preto inferior direito
+    doc.setFillColor(black[0], black[1], black[2]);
+    doc.triangle(210, 297, 210, 250, 160, 297, 'F');
     
-    // Informações da diretora
-    doc.setTextColor(darkBlue[0], darkBlue[1], darkBlue[2]);
+    // Triângulo ciano no canto inferior direito
+    doc.setFillColor(cyanBlue[0], cyanBlue[1], cyanBlue[2]);
+    doc.triangle(210, 297, 190, 297, 210, 277, 'F');
+    
+    // Informações da diretora comercial centralizadas
+    doc.setTextColor(black[0], black[1], black[2]);
     doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    doc.text('JENIFFER LEITE - (85) 98676.1518', 105, footerY + 20, { align: 'center' });
     doc.setFont(undefined, 'bold');
-    doc.text('JENIFFER LEITE - (85) 98676.1518', 105, footerY + 12, { align: 'center' });
-    doc.text('DIRETORA COMERCIAL', 105, footerY + 20, { align: 'center' });
+    doc.text('DIRETORA COMERCIAL', 105, footerY + 28, { align: 'center' });
     
-    // Logo no rodapé (centralizada)
+    // Logo centralizada no rodapé
     try {
-      const logoImg = new Image();
-      logoImg.crossOrigin = "anonymous";
+      const footerLogoImg = new Image();
+      footerLogoImg.crossOrigin = "anonymous";
       
       await new Promise((resolve, reject) => {
-        logoImg.onload = () => {
-          doc.addImage(logoImg, 'PNG', 95, footerY + 25, 20, 15);
+        footerLogoImg.onload = () => {
+          doc.addImage(footerLogoImg, 'PNG', 95, footerY + 35, 20, 15);
           resolve(true);
         };
-        logoImg.onerror = reject;
-        logoImg.src = '/lovable-uploads/c3a950dc-98b6-4517-8005-7942f1bdbbf6.png';
+        footerLogoImg.onerror = reject;
+        footerLogoImg.src = '/lovable-uploads/c3a950dc-98b6-4517-8005-7942f1bdbbf6.png';
       });
     } catch (error) {
       console.error('Erro ao carregar logo do rodapé:', error);
