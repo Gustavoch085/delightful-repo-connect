@@ -1,3 +1,4 @@
+
 import { FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import jsPDF from 'jspdf';
@@ -52,35 +53,35 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
       console.error('Erro ao carregar logo da empresa:', error);
     }
     
-    // Título "FORTAL SOLUÇÕES" no cabeçalho direito
-    doc.setTextColor(cyanBlue[0], cyanBlue[1], cyanBlue[2]);
-    doc.setFontSize(20);
-    doc.setFont(undefined, 'bold');
-    doc.text('FORTAL SOLUÇÕES', 130, 25);
-    
-    // Informações da empresa
-    doc.setTextColor(black[0], black[1], black[2]);
-    doc.setFontSize(10);
-    doc.setFont(undefined, 'normal');
-    doc.text('CNPJ: 29.564.347/0001-49', 130, 35);
-    doc.text('RUA ERNESTO PEDRO DOS SANTOS, 66 - JOQUEI', 130, 42);
-    
     // Encontrar dados do cliente
     const cliente = clientes.find(c => c.name === budget.client_name);
     
-    // Seção do cliente (posicionada à esquerda)
+    // Nome do cliente no cabeçalho direito (no lugar de "FORTAL SOLUÇÕES")
+    doc.setTextColor(cyanBlue[0], cyanBlue[1], cyanBlue[2]);
+    doc.setFontSize(20);
+    doc.setFont(undefined, 'bold');
+    doc.text(budget.client_name?.toUpperCase() || 'CLIENTE', 130, 25);
+    
+    // Telefone do cliente (no lugar das informações da empresa)
+    doc.setTextColor(black[0], black[1], black[2]);
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    doc.text(`Telefone: ${cliente?.phone || '(85) 00000-0000'}`, 130, 35);
+    doc.text('RUA ERNESTO PEDRO DOS SANTOS, 66 - JOQUEI', 130, 42);
+    
+    // Seção do cliente (posicionada à esquerda) - removida já que está no cabeçalho
     let yPos = 80;
     doc.setTextColor(cyanBlue[0], cyanBlue[1], cyanBlue[2]);
     doc.setFontSize(16);
     doc.setFont(undefined, 'bold');
-    doc.text(budget.client_name?.toUpperCase() || 'CLIENTE', 20, yPos);
+    doc.text('FORTAL SOLUÇÕES', 20, yPos);
     
-    // Telefone do cliente
+    // Informações da empresa no local do cliente
     yPos += 10;
     doc.setTextColor(black[0], black[1], black[2]);
     doc.setFontSize(10);
     doc.setFont(undefined, 'normal');
-    doc.text(`(${cliente?.phone || '85) 00000-0000'}) - ${budget.client_name || 'Cliente'}`, 20, yPos);
+    doc.text('CNPJ: 29.564.347/0001-49', 20, yPos);
     
     // Espaço antes da tabela
     yPos += 30;
