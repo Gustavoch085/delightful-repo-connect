@@ -98,8 +98,8 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
     doc.setFillColor(tableHeaderGreen[0], tableHeaderGreen[1], tableHeaderGreen[2]);
     doc.rect(tableStartX, yPos, tableWidth, rowHeight, 'F');
     
-    // Bordas do cabeçalho
-    doc.setDrawColor(0, 0, 0);
+    // Bordas do cabeçalho - mudando para branco
+    doc.setDrawColor(white[0], white[1], white[2]);
     doc.setLineWidth(0.5);
     
     // Linhas verticais do cabeçalho
@@ -137,8 +137,8 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
         doc.setFillColor(tableRowGray[0], tableRowGray[1], tableRowGray[2]);
         doc.rect(tableStartX, yPos, tableWidth, rowHeight, 'F');
         
-        // Bordas da linha
-        doc.setDrawColor(0, 0, 0);
+        // Bordas da linha - mudando para branco
+        doc.setDrawColor(white[0], white[1], white[2]);
         doc.setLineWidth(0.5);
         
         // Linhas verticais
@@ -178,8 +178,8 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
     doc.setFillColor(tableRowGray[0], tableRowGray[1], tableRowGray[2]);
     doc.rect(tableStartX + colWidths[0] + colWidths[1], yPos, colWidths[2] + colWidths[3], rowHeight, 'F');
     
-    // Bordas da linha de total
-    doc.setDrawColor(0, 0, 0);
+    // Bordas da linha de total - mudando para branco
+    doc.setDrawColor(white[0], white[1], white[2]);
     doc.setLineWidth(0.5);
     doc.rect(tableStartX + colWidths[0] + colWidths[1], yPos, colWidths[2] + colWidths[3], rowHeight);
     
