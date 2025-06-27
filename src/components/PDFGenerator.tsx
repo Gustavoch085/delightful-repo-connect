@@ -27,6 +27,7 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
     const lightGray = [245, 245, 245];
     const tableRowGray = [220, 220, 220]; // Cinza claro para linhas
     const headerTextColor = [25, 255, 245]; // Nova cor para texto do cabeçalho #19fff5
+    const clientNameColor = [0, 124, 128]; // Cor #007C80 para o nome do cliente
     
     // Background branco
     doc.setFillColor(white[0], white[1], white[2]);
@@ -57,8 +58,25 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
     // Encontrar dados do cliente
     const cliente = clientes.find(c => c.name === budget.client_name);
     
-    // Espaço antes da tabela (ajustado para dar espaço para a nova imagem)
-    let yPos = 90;
+    // Espaço antes dos dados do cliente (ajustado para dar espaço para a nova imagem)
+    let yPos = 85;
+    
+    // Adicionar nome do cliente com cor #007C80
+    doc.setTextColor(clientNameColor[0], clientNameColor[1], clientNameColor[2]);
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text(budget.client_name, 20, yPos);
+    
+    // Adicionar telefone do cliente - nome do cliente em preto com texto menor
+    yPos += 8;
+    doc.setTextColor(black[0], black[1], black[2]);
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    const telefoneTexto = `${cliente?.phone || '(85) 98828-9996'} - ${budget.client_name}`;
+    doc.text(telefoneTexto, 20, yPos);
+    
+    // Espaço antes da tabela
+    yPos += 15;
     
     // Dimensões da tabela
     const tableStartX = 20;
