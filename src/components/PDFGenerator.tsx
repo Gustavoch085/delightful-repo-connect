@@ -167,38 +167,40 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
     doc.text('TOTAL :', tableStartX + colWidths[0] + colWidths[1] + colWidths[2]/2, yPos + 8, { align: 'center' });
     doc.text(`R$${formatCurrency(totalGeral)}`, tableStartX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3]/2, yPos + 8, { align: 'center' });
     
-    // Seção de condições de pagamento - ajustando os espaçamentos
-    yPos += 20;
+    // Seção de condições de pagamento - reduzindo os espaçamentos
+    yPos += 15; // Reduzido de 20 para 15
     
     doc.setTextColor(black[0], black[1], black[2]);
     doc.setFontSize(10);
     doc.setFont(undefined, 'bold');
     doc.text('Formas de Pagamento:', 20, yPos);
     
-    yPos += 6; // Espaçamento entre título e conteúdo
+    yPos += 4; // Reduzido de 6 para 4
     doc.setFont(undefined, 'normal');
     doc.text('50% Para início da produção / 50% Ao Concluir-Receber', 20, yPos);
     
-    yPos += 12; // Espaçamento entre seções
+    yPos += 8; // Reduzido de 12 para 8
     doc.setFont(undefined, 'bold');
     doc.text('Prazos:', 20, yPos);
-    yPos += 6; // Espaçamento entre título e conteúdo
+    yPos += 4; // Reduzido de 6 para 4
     doc.setFont(undefined, 'normal');
     doc.text('A Combinar', 20, yPos);
     
-    yPos += 12; // Espaçamento entre seções
+    yPos += 8; // Reduzido de 12 para 8
     doc.setFont(undefined, 'bold');
     doc.text('Logística:', 20, yPos);
-    yPos += 6; // Espaçamento entre título e conteúdo
+    yPos += 4; // Reduzido de 6 para 4
     doc.setFont(undefined, 'normal');
     doc.text('Instalado', 20, yPos);
     
-    yPos += 12; // Espaçamento entre seções
+    yPos += 8; // Reduzido de 12 para 8
     doc.setFont(undefined, 'bold');
     doc.text('Endereço de Instalação:', 20, yPos);
-    yPos += 6; // Espaçamento entre título e conteúdo
+    yPos += 4; // Reduzido de 6 para 4
     doc.setFont(undefined, 'normal');
-    doc.text(cliente?.address || 'Av. III, 626, Jereissati I - Maracanaú', 20, yPos);
+    // Corrigindo o endereço de instalação - usando o endereço do cliente selecionado
+    const enderecoInstalacao = cliente?.address || 'Av. III, 626, Jereissati I - Maracanaú';
+    doc.text(enderecoInstalacao, 20, yPos);
     
     // Nova imagem do rodapé ocupando toda a largura
     try {
