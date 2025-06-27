@@ -20,9 +20,6 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
   const generatePDF = async () => {
     const doc = new jsPDF();
     
-    // Adicionar fonte Source Code Pro
-    const fontUrl = 'https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;700&display=swap';
-    
     // Cores do design
     const cyanBlue = [0, 200, 255]; // Azul ciano principal
     const darkBlue = [0, 51, 102]; // Azul escuro
@@ -33,8 +30,8 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
     const headerTextColor = [25, 255, 245]; // Nova cor para texto do cabeçalho #19fff5
     const clientNameColor = [0, 124, 128]; // Cor #007C80 para o nome do cliente
     
-    // Definir fonte padrão como Source Code Pro
-    doc.setFont('courier', 'normal'); // Usando courier como fallback que é similar ao Source Code Pro
+    // Definir fonte padrão como Helvetica (similar à Inter)
+    doc.setFont('helvetica', 'normal');
     
     // Background branco
     doc.setFillColor(white[0], white[1], white[2]);
@@ -71,14 +68,14 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
     // Adicionar nome do cliente com cor #007C80
     doc.setTextColor(clientNameColor[0], clientNameColor[1], clientNameColor[2]);
     doc.setFontSize(14);
-    doc.setFont('courier', 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.text(budget.client_name, 20, yPos);
     
     // Adicionar telefone do cliente - nome do cliente em preto com texto menor
     yPos += 8;
     doc.setTextColor(black[0], black[1], black[2]);
     doc.setFontSize(10);
-    doc.setFont('courier', 'normal');
+    doc.setFont('helvetica', 'normal');
     const telefoneTexto = `${cliente?.phone || '(85) 98828-9996'} - ${budget.client_name}`;
     doc.text(telefoneTexto, 20, yPos);
     
@@ -115,7 +112,7 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
     // Texto do cabeçalho da tabela - cor #19fff5
     doc.setTextColor(headerTextColor[0], headerTextColor[1], headerTextColor[2]);
     doc.setFontSize(10);
-    doc.setFont('courier', 'bold');
+    doc.setFont('helvetica', 'bold');
     
     // Posicionar texto centrado nas colunas
     doc.text('QUANT', tableStartX + colWidths[0]/2, yPos + 8, { align: 'center' });
@@ -152,7 +149,7 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
         
         doc.setTextColor(black[0], black[1], black[2]);
         doc.setFontSize(9);
-        doc.setFont('courier', 'normal');
+        doc.setFont('helvetica', 'normal');
         
         // Quantidade centralizada
         doc.text(String(item.quantity).padStart(2, '0'), tableStartX + colWidths[0]/2, yPos + 8, { align: 'center' });
@@ -188,7 +185,7 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
     // Texto do total
     doc.setTextColor(black[0], black[1], black[2]);
     doc.setFontSize(10);
-    doc.setFont('courier', 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.text('TOTAL :', tableStartX + colWidths[0] + colWidths[1] + colWidths[2]/2, yPos + 8, { align: 'center' });
     doc.text(`R$${formatCurrency(totalGeral)}`, tableStartX + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3]/2, yPos + 8, { align: 'center' });
     
@@ -197,32 +194,32 @@ export function PDFGenerator({ budget, clientes, disabled = false }: PDFGenerato
     
     doc.setTextColor(black[0], black[1], black[2]);
     doc.setFontSize(10);
-    doc.setFont('courier', 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.text('Formas de Pagamento:', 20, yPos);
     
     yPos += 4;
-    doc.setFont('courier', 'normal');
+    doc.setFont('helvetica', 'normal');
     doc.text('50% Para início da produção / 50% Ao Concluir-Receber', 20, yPos);
     
     yPos += 6; // Reduzido de 8 para 6
-    doc.setFont('courier', 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.text('Prazos:', 20, yPos);
     yPos += 4;
-    doc.setFont('courier', 'normal');
+    doc.setFont('helvetica', 'normal');
     doc.text('A Combinar', 20, yPos);
     
     yPos += 6; // Reduzido de 8 para 6
-    doc.setFont('courier', 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.text('Logística:', 20, yPos);
     yPos += 4;
-    doc.setFont('courier', 'normal');
+    doc.setFont('helvetica', 'normal');
     doc.text('Instalado', 20, yPos);
     
     yPos += 6; // Reduzido de 8 para 6
-    doc.setFont('courier', 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.text('Endereço de Instalação:', 20, yPos);
     yPos += 4;
-    doc.setFont('courier', 'normal');
+    doc.setFont('helvetica', 'normal');
     // Corrigindo o endereço de instalação - usando o endereço do cliente selecionado
     const enderecoInstalacao = cliente?.address || 'Av. III, 626, Jereissati I - Maracanaú';
     doc.text(enderecoInstalacao, 20, yPos);
