@@ -4,6 +4,7 @@ import { Users, DollarSign, TrendingUp, Calendar } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useDataContext } from "@/contexts/DataContext";
 import { LoadingScreen } from "./LoadingScreen";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { 
   usePreloadedClients, 
   usePreloadedBudgets, 
@@ -14,11 +15,12 @@ import {
 export function Dashboard() {
   const [dashboardData, setDashboardData] = useState({
     totalClientes: 0,
-    receitasDoMes: "R$ 0,00",
-    despesasDoMes: "R$ 0,00",
+    vendasDoMes: "R$ 0,00",
+    comprasDoMes: "R$ 0,00",
     orcamentosPendentes: 0,
     clientesRecentes: [],
-    atividadesRecentes: []
+    atividadesRecentes: [],
+    chartData: []
   });
 
   const { isPreloading } = useDataContext();
@@ -46,13 +48,13 @@ export function Dashboard() {
   const calculateDashboardData = () => {
     const totalClientes = clientes.length;
 
-    const receitasFaturas = faturas
+    const vendasFaturas = faturas
       .filter(fatura => isCurrentMonth(fatura.date))
       .reduce((total, fatura) => {
         return total + parseFloat(fatura.value?.toString() || '0');
       }, 0);
 
-    const receitasOrcamentos = orcamentos
+    const vendasOrcamentos = orcamentos
       .filter(orcamento => 
         orcamento.status === 'Finalizado' && 
         (isCurrentMonth(orcamento.date) || (orcamento.delivery_date && isCurrentMonth(orcamento.delivery_date)))
@@ -61,9 +63,9 @@ export function Dashboard() {
         return total + parseFloat(orcamento.total?.toString() || '0');
       }, 0);
 
-    const receitasTotal = receitasFaturas + receitasOrcamentos;
+    const vendasTotal = vendasFaturas + vendasOrcamentos;
 
-    const despesasTotal = despesas
+    const comprasTotal = despesas
       .filter(despesa => isCurrentMonth(despesa.date))
       .reduce((total, expense) => {
         return total + parseFloat(expense.value?.toString() || '0');
@@ -79,13 +81,27 @@ export function Dashboard() {
       date: new Date(budget.date).toLocaleDateString('pt-BR')
     }));
 
+    const chartData = [
+      {
+        name: 'Vendas',
+        valor: vendasTotal,
+        fill: '#10b981'
+      },
+      {
+        name: 'Compras',
+        valor: comprasTotal,
+        fill: '#ef4444'
+      }
+    ];
+
     setDashboardData({
       totalClientes,
-      receitasDoMes: formatCurrency(receitasTotal),
-      despesasDoMes: formatCurrency(despesasTotal),
+      vendasDoMes: formatCurrency(vendasTotal),
+      comprasDoMes: formatCurrency(comprasTotal),
       orcamentosPendentes,
       clientesRecentes,
-      atividadesRecentes
+      atividadesRecentes,
+      chartData
     });
   };
 
@@ -105,14 +121,14 @@ export function Dashboard() {
       iconBg: "bg-blue-600",
     },
     {
-      title: "Receitas do Mês",
-      value: dashboardData.receitasDoMes,
+      title: "Vendas do Mês",
+      value: dashboardData.vendasDoMes,
       icon: DollarSign,
       iconBg: "bg-green-600",
     },
     {
-      title: "Despesas do Mês",
-      value: dashboardData.despesasDoMes,
+      title: "Compras do Mês",
+      value: dashboardData.comprasDoMes,
       icon: TrendingUp,
       iconBg: "bg-red-600",
     },
@@ -145,6 +161,40 @@ export function Dashboard() {
           </Card>
         ))}
       </div>
+
+      {/* Gráfico de Vendas e Compras */}
+      <Card className="bg-crm-card border-crm-border mb-6">
+        <CardContent className="p-6">
+          <h3 className="text-xl font-semibold text-white mb-4">Vendas vs Compras do Mês</h3>
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={dashboardData.chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                <XAxis 
+                  dataKey="name" 
+                  stroke="#9ca3af"
+                  fontSize={12}
+                />
+                <YAxis 
+                  stroke="#9ca3af"
+                  fontSize={12}
+                  tickFormatter={(value) => formatCurrency(value)}
+                />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: '#1f2937', 
+                    border: '1px solid #374151',
+                    borderRadius: '8px'
+                  }}
+                  labelStyle={{ color: '#f3f4f6' }}
+                  formatter={(value) => [formatCurrency(Number(value)), '']}
+                />
+                <Bar dataKey="valor" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="bg-crm-card border-crm-border">

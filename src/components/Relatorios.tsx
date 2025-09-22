@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TrendingUp, TrendingDown, DollarSign, Edit, Trash2, Plus, User, Calendar, RotateCcw } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, Edit, Trash2, Plus, User, Calendar } from "lucide-react";
 import { DespesaModal } from "./modals/DespesaModal";
 import { FaturaModal } from "./modals/FaturaModal";
 import { RelatorioMensalModal } from "./modals/RelatorioMensalModal";
@@ -217,14 +217,14 @@ export function Relatorios() {
 
   const financialStats = [
     {
-      title: "Total Receitas",
+      title: "Total Vendas",
       value: formatCurrency(totalRevenues),
       icon: TrendingUp,
       iconBg: "bg-green-600",
       color: "text-green-400"
     },
     {
-      title: "Total Despesas",
+      title: "Total Compras",
       value: formatCurrency(totalExpenses),
       icon: TrendingDown,
       iconBg: "bg-red-600",
@@ -340,46 +340,6 @@ export function Relatorios() {
     setRelatorioMensalModalOpen(true);
   };
 
-  const handleReset = async () => {
-    const confirmReset = window.confirm(
-      'Tem certeza que deseja apagar todas as despesas e faturas? Esta ação não pode ser desfeita.'
-    );
-    
-    if (!confirmReset) return;
-
-    try {
-      // Deletar todas as despesas
-      const { error: expenseError } = await supabase
-        .from('despesas')
-        .delete()
-        .neq('id', '00000000-0000-0000-0000-000000000000'); // Deletar todos os registros
-      
-      if (expenseError) {
-        console.error('Erro ao deletar despesas:', expenseError);
-        return;
-      }
-
-      // Deletar todas as faturas
-      const { error: revenueError } = await supabase
-        .from('faturas')
-        .delete()
-        .neq('id', '00000000-0000-0000-0000-000000000000'); // Deletar todos os registros
-      
-      if (revenueError) {
-        console.error('Erro ao deletar faturas:', revenueError);
-        return;
-      }
-
-      // Atualizar os dados
-      refetchExpenses();
-      refetchRevenues();
-      
-      alert('Todas as despesas e faturas foram apagadas com sucesso!');
-    } catch (error) {
-      console.error('Erro no reset:', error);
-      alert('Erro ao realizar o reset. Tente novamente.');
-    }
-  };
 
   return (
     <div className="p-6 bg-crm-dark min-h-screen">
@@ -387,15 +347,6 @@ export function Relatorios() {
         <h1 className="text-3xl font-bold text-white">Relatórios Financeiros</h1>
         
         <div className="flex gap-3">
-          {/* Botão Reset */}
-          <Button
-            onClick={handleReset}
-            className="bg-red-600 hover:bg-red-700"
-          >
-            <RotateCcw className="h-4 w-4 mr-2" />
-            Reset
-          </Button>
-          
           {/* Botão do relatório do mês anterior */}
           <Button
             onClick={handleShowPreviousMonthReport}
@@ -432,17 +383,17 @@ export function Relatorios() {
           <Tabs defaultValue="expenses" className="w-full">
             <TabsList className="grid w-full grid-cols-2 bg-crm-dark">
               <TabsTrigger value="expenses" className="text-gray-300 data-[state=active]:text-white">
-                Despesas
+                Compras
               </TabsTrigger>
               <TabsTrigger value="revenues" className="text-gray-300 data-[state=active]:text-white">
-                Faturas
+                Vendas
               </TabsTrigger>
             </TabsList>
             
             <TabsContent value="expenses" className="mt-6">
               <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center gap-4">
-                  <h3 className="text-xl font-semibold text-white">Despesas</h3>
+                  <h3 className="text-xl font-semibold text-white">Compras</h3>
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-gray-400" />
                     <Select value={selectedClient} onValueChange={setSelectedClient}>
@@ -468,7 +419,7 @@ export function Relatorios() {
                   className="bg-red-600 hover:bg-red-700"
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  Nova Despesa
+                  Nova Compra
                 </Button>
               </div>
 
@@ -517,8 +468,8 @@ export function Relatorios() {
                 <div className="text-center py-8">
                   <p className="text-gray-400">
                     {selectedClient === "all" 
-                      ? "Nenhuma despesa registrada ainda." 
-                      : `Nenhuma despesa encontrada para ${selectedClient}.`
+                      ? "Nenhuma compra registrada ainda." 
+                      : `Nenhuma compra encontrada para ${selectedClient}.`
                     }
                   </p>
                 </div>
@@ -527,7 +478,7 @@ export function Relatorios() {
             
             <TabsContent value="revenues" className="mt-6">
               <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-semibold text-white">Faturas</h3>
+                <h3 className="text-xl font-semibold text-white">Vendas</h3>
                 <Button 
                   onClick={() => {
                     setEditingFatura(null);
@@ -536,7 +487,7 @@ export function Relatorios() {
                   className="bg-green-600 hover:bg-green-700"
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  Nova Fatura
+                  Nova Venda
                 </Button>
               </div>
               
