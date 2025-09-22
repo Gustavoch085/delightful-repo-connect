@@ -107,6 +107,51 @@ export type Database = {
         }
         Relationships: []
       }
+      estoque_movimentos: {
+        Row: {
+          created_at: string
+          id: string
+          motivo: string | null
+          orcamento_id: string | null
+          produto_id: string
+          quantidade: number
+          tipo: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          motivo?: string | null
+          orcamento_id?: string | null
+          produto_id: string
+          quantidade: number
+          tipo: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          motivo?: string | null
+          orcamento_id?: string | null
+          produto_id?: string
+          quantidade?: number
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estoque_movimentos_orcamento_id_fkey"
+            columns: ["orcamento_id"]
+            isOneToOne: false
+            referencedRelation: "orcamentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estoque_movimentos_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       faturas: {
         Row: {
           amount: number
