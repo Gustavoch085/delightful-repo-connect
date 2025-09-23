@@ -24,12 +24,8 @@ export const useMonthlyArchive = () => {
       
       try {
         // Verificar se já existe relatório arquivado para o mês anterior
-        const { data: existingReport } = await supabase
-          .from('relatorios_mensais')
-          .select('id')
-          .eq('mes', previousMonth)
-          .eq('ano', previousYear)
-          .single();
+        // Para agora, vamos comentar esta funcionalidade até que a tabela seja criada
+        const existingReport = null;
         
         if (existingReport) {
           console.log('Relatório do mês anterior já existe');
@@ -55,7 +51,7 @@ export const useMonthlyArchive = () => {
         
         // Calcular totais
         const totalExpenses = expenses?.reduce((total, expense) => {
-          return total + parseFloat(expense.value?.toString() || '0');
+          return total + parseFloat(expense.amount?.toString() || '0');
         }, 0) || 0;
         
         const totalRevenues = revenues?.reduce((total, revenue) => {
@@ -64,18 +60,13 @@ export const useMonthlyArchive = () => {
         
         const netProfit = totalRevenues - totalExpenses;
         
-        // Arquivar o relatório
-        const { error: archiveError } = await supabase
-          .from('relatorios_mensais')
-          .insert({
-            mes: previousMonth,
-            ano: previousYear,
-            total_receitas: totalRevenues,
-            total_despesas: totalExpenses,
-            lucro_liquido: netProfit,
-            despesas: expenses || [],
-            faturas: revenues || []
-          });
+        // Arquivar o relatório - comentado até tabela ser criada
+        console.log(`Relatório seria arquivado: ${previousMonth}/${previousYear}`, {
+          totalRevenues,
+          totalExpenses,
+          netProfit
+        });
+        const archiveError = null;
         
         if (archiveError) {
           console.error('Erro ao arquivar relatório mensal:', archiveError);

@@ -85,6 +85,7 @@ export type Database = {
           date: string
           description: string
           id: string
+          title: string | null
           updated_at: string
         }
         Insert: {
@@ -94,6 +95,7 @@ export type Database = {
           date?: string
           description: string
           id?: string
+          title?: string | null
           updated_at?: string
         }
         Update: {
@@ -103,6 +105,7 @@ export type Database = {
           date?: string
           description?: string
           id?: string
+          title?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -162,6 +165,7 @@ export type Database = {
           description: string
           id: string
           orcamento_id: string | null
+          status: string | null
           title: string | null
           updated_at: string
           value: number | null
@@ -175,6 +179,7 @@ export type Database = {
           description: string
           id?: string
           orcamento_id?: string | null
+          status?: string | null
           title?: string | null
           updated_at?: string
           value?: number | null
@@ -188,6 +193,7 @@ export type Database = {
           description?: string
           id?: string
           orcamento_id?: string | null
+          status?: string | null
           title?: string | null
           updated_at?: string
           value?: number | null
@@ -247,6 +253,7 @@ export type Database = {
         Row: {
           client_name: string
           created_at: string
+          date: string | null
           delivery_date: string | null
           id: string
           orcamento_items: Json | null
@@ -258,6 +265,7 @@ export type Database = {
         Insert: {
           client_name: string
           created_at?: string
+          date?: string | null
           delivery_date?: string | null
           id?: string
           orcamento_items?: Json | null
@@ -269,6 +277,7 @@ export type Database = {
         Update: {
           client_name?: string
           created_at?: string
+          date?: string | null
           delivery_date?: string | null
           id?: string
           orcamento_items?: Json | null

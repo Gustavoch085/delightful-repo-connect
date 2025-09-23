@@ -396,7 +396,7 @@ export function Vendas() {
                       
                       <div className="flex items-center gap-2 text-gray-300">
                         <Calendar className="h-4 w-4" />
-                        <span>Venda: {formatDateToBrazilian(venda.date)}</span>
+                        <span>Venda: {venda.delivery_date ? formatDateToBrazilian(venda.delivery_date) : formatDateToBrazilian(venda.created_at.split('T')[0])}</span>
                       </div>
                       
                       {venda.delivery_date && (

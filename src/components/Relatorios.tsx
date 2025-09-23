@@ -65,17 +65,8 @@ export function Relatorios() {
   const { data: previousReport } = useQuery({
     queryKey: ['relatorio-mensal', previousMonth, previousYear],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('relatorios_mensais')
-        .select('*')
-        .eq('mes', previousMonth)
-        .eq('ano', previousYear)
-        .single();
-      
-      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
-        throw error;
-      }
-      return data;
+      // Temporariamente removido até tabela ser criada
+      return null;
     }
   });
 
@@ -149,8 +140,10 @@ export function Relatorios() {
               .insert({
                 title: budget.title,
                 client_name: budget.client_name,
+                amount: budget.total,
                 value: budget.total,
-                date: budget.date,
+                description: `Venda automática - ${budget.title}`,
+                date: budget.delivery_date || new Date().toISOString().split('T')[0],
                 orcamento_id: budget.id,
                 status: 'Pago'
               });
@@ -245,8 +238,9 @@ export function Relatorios() {
         .from('despesas')
         .update({
           title: despesaData.title,
+          description: despesaData.title,
           category: despesaData.client, // Usando client como category
-          value: parseFloat(despesaData.value.replace('- R$ ', '').replace('.', '').replace(',', '.')),
+          amount: parseFloat(despesaData.value.replace('- R$ ', '').replace('.', '').replace(',', '.')),
           date: despesaData.date
         })
         .eq('id', editingDespesa.id);
@@ -261,8 +255,9 @@ export function Relatorios() {
         .from('despesas')
         .insert({
           title: despesaData.title,
+          description: despesaData.title,
           category: despesaData.client,
-          value: parseFloat(despesaData.value.replace('- R$ ', '').replace('.', '').replace(',', '.')),
+          amount: parseFloat(despesaData.value.replace('- R$ ', '').replace('.', '').replace(',', '.')),
           date: despesaData.date
         });
       
@@ -280,7 +275,9 @@ export function Relatorios() {
         .from('faturas')
         .update({
           title: faturaData.title,
+          description: faturaData.title,
           client_name: faturaData.client,
+          amount: parseFloat(faturaData.value.replace('+ R$ ', '').replace('.', '').replace(',', '.')),
           value: parseFloat(faturaData.value.replace('+ R$ ', '').replace('.', '').replace(',', '.')),
           date: faturaData.date
         })
@@ -296,7 +293,9 @@ export function Relatorios() {
         .from('faturas')
         .insert({
           title: faturaData.title,
+          description: faturaData.title,
           client_name: faturaData.client,
+          amount: parseFloat(faturaData.value.replace('+ R$ ', '').replace('.', '').replace(',', '.')),
           value: parseFloat(faturaData.value.replace('+ R$ ', '').replace('.', '').replace(',', '.')),
           date: faturaData.date
         });
@@ -428,13 +427,13 @@ export function Relatorios() {
                   {filteredExpenses.map((expense) => (
                     <div key={expense.id} className="flex justify-between items-center p-4 rounded-lg border border-crm-border">
                       <div>
-                        <p className="text-white font-medium">{expense.title}</p>
+                        <p className="text-white font-medium">{expense.title || expense.description}</p>
                         <p className="text-gray-400 text-sm">
                           {expense.category || 'Sem Cliente'} • {formatDateDisplay(expense.date)}
                         </p>
                       </div>
                       <div className="flex items-center gap-4">
-                        <p className="text-red-400 font-semibold">- {formatCurrency(parseFloat(expense.value?.toString() || '0'))}</p>
+                        <p className="text-red-400 font-semibold">- {formatCurrency(parseFloat(expense.amount?.toString() || '0'))}</p>
                         <div className="flex gap-2">
                           <Button 
                             size="sm" 
@@ -443,7 +442,7 @@ export function Relatorios() {
                               setEditingDespesa({
                                 ...expense,
                                 client: expense.category,
-                                value: `- R$ ${parseFloat(expense.value?.toString() || '0').toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                value: `- R$ ${parseFloat(expense.amount?.toString() || '0').toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                               });
                               setDespesaModalOpen(true);
                             }}

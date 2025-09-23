@@ -206,7 +206,7 @@ export function Agenda() {
                         <div className="pt-2 border-t border-crm-border">
                           <p className="text-gray-400 text-sm mb-2">Produtos:</p>
                           <div className="space-y-1">
-                            {budget.orcamento_items?.slice(0, 3).map((item, index) => (
+                            {Array.isArray(budget.orcamento_items) && (budget.orcamento_items as any[]).slice(0, 3).map((item, index) => (
                               <div key={index} className="text-sm text-gray-300 flex justify-between">
                                 <span>{item.quantity || 0}x {item.product_name || 'Produto sem nome'}</span>
                                 <span className="text-gray-400">
@@ -285,7 +285,7 @@ export function Agenda() {
                         <div className="pt-2 border-t border-crm-border">
                           <p className="text-gray-400 text-sm mb-2">Produtos:</p>
                           <div className="space-y-1">
-                            {budget.orcamento_items?.slice(0, 3).map((item, index) => (
+                            {Array.isArray(budget.orcamento_items) && (budget.orcamento_items as any[]).slice(0, 3).map((item, index) => (
                               <div key={index} className="text-sm text-gray-300 flex justify-between">
                                 <span>{item.quantity || 0}x {item.product_name || 'Produto sem nome'}</span>
                                 <span className="text-gray-400">

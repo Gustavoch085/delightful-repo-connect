@@ -57,7 +57,7 @@ export function Dashboard() {
     const vendasOrcamentos = orcamentos
       .filter(orcamento => 
         orcamento.status === 'Finalizado' && 
-        (isCurrentMonth(orcamento.date) || (orcamento.delivery_date && isCurrentMonth(orcamento.delivery_date)))
+        (isCurrentMonth(orcamento.created_at) || (orcamento.delivery_date && isCurrentMonth(orcamento.delivery_date)))
       )
       .reduce((total, orcamento) => {
         return total + parseFloat(orcamento.total?.toString() || '0');
@@ -68,7 +68,7 @@ export function Dashboard() {
     const comprasTotal = despesas
       .filter(despesa => isCurrentMonth(despesa.date))
       .reduce((total, expense) => {
-        return total + parseFloat(expense.value?.toString() || '0');
+        return total + parseFloat(expense.amount?.toString() || '0');
       }, 0);
 
     const orcamentosPendentes = orcamentos.filter(budget => budget.status === 'Aguardando').length;
@@ -78,7 +78,7 @@ export function Dashboard() {
       title: budget.title || 'Orçamento',
       client: budget.client_name,
       value: formatCurrency(parseFloat(budget.total?.toString() || '0')),
-      date: new Date(budget.date).toLocaleDateString('pt-BR')
+      date: new Date(budget.created_at).toLocaleDateString('pt-BR')
     }));
 
     const chartData = [

@@ -392,7 +392,9 @@ export function Orcamentos() {
             .insert({
               title: data.title,
               client_name: data.client_name,
+              amount: data.total,
               value: data.total,
+              description: `Venda automática - ${data.title}`,
               date: new Date().toISOString().split('T')[0], // Data atual
               orcamento_id: data.id,
               status: 'Pago'
