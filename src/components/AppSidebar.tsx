@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, FileText, DollarSign, Calendar, LogOut, FileX, ShoppingCart } from "lucide-react";
+import { LayoutDashboard, Users, FileText, DollarSign, Calendar, LogOut, FileX, ShoppingCart, CalendarCheck } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -51,6 +51,12 @@ const menuItems = [
     url: "/vendas",
     icon: ShoppingCart,
     permission: "vendas",
+  },
+  {
+    title: "Agenda",
+    url: "/agenda",
+    icon: CalendarCheck,
+    permission: "agenda",
   },
   {
     title: "Logs",

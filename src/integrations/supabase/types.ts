@@ -156,31 +156,92 @@ export type Database = {
         Row: {
           amount: number
           category: string | null
+          client_name: string | null
           created_at: string
           date: string
           description: string
           id: string
+          orcamento_id: string | null
+          title: string | null
           updated_at: string
+          value: number | null
         }
         Insert: {
           amount?: number
           category?: string | null
+          client_name?: string | null
           created_at?: string
           date?: string
           description: string
           id?: string
+          orcamento_id?: string | null
+          title?: string | null
           updated_at?: string
+          value?: number | null
         }
         Update: {
           amount?: number
           category?: string | null
+          client_name?: string | null
           created_at?: string
           date?: string
           description?: string
           id?: string
+          orcamento_id?: string | null
+          title?: string | null
+          updated_at?: string
+          value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "faturas_orcamento_id_fkey"
+            columns: ["orcamento_id"]
+            isOneToOne: false
+            referencedRelation: "orcamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orcamento_items: {
+        Row: {
+          created_at: string
+          id: string
+          orcamento_id: string
+          price: number
+          product_name: string
+          quantity: number
+          subtotal: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          orcamento_id: string
+          price?: number
+          product_name: string
+          quantity?: number
+          subtotal?: number | null
           updated_at?: string
         }
-        Relationships: []
+        Update: {
+          created_at?: string
+          id?: string
+          orcamento_id?: string
+          price?: number
+          product_name?: string
+          quantity?: number
+          subtotal?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orcamento_items_orcamento_id_fkey"
+            columns: ["orcamento_id"]
+            isOneToOne: false
+            referencedRelation: "orcamentos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       orcamentos: {
         Row: {
