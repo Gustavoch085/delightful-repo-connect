@@ -180,7 +180,8 @@ export function Relatorios() {
       : items;
     
     return filteredItems.reduce((total, item) => {
-      const value = parseFloat(item.value?.toString() || '0');
+      // Para despesas, usar o campo 'amount', para faturas usar 'value'
+      const value = parseFloat(item.amount?.toString() || item.value?.toString() || '0');
       return total + Math.abs(value);
     }, 0);
   };
