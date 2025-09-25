@@ -8,10 +8,11 @@ import { DespesaModal } from "./modals/DespesaModal";
 import { FaturaModal } from "./modals/FaturaModal";
 import { RelatorioMensalModal } from "./modals/RelatorioMensalModal";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMonthlyArchive } from "@/hooks/useMonthlyArchive";
 
 export function Relatorios() {
+  const queryClient = useQueryClient();
   const [despesaModalOpen, setDespesaModalOpen] = useState(false);
   const [faturaModalOpen, setFaturaModalOpen] = useState(false);
   const [relatorioMensalModalOpen, setRelatorioMensalModalOpen] = useState(false);
@@ -266,6 +267,11 @@ export function Relatorios() {
         return;
       }
     }
+    
+    // Invalidar queries relacionadas para atualizar os dados automaticamente
+    queryClient.invalidateQueries({ queryKey: ['despesas'] });
+    queryClient.invalidateQueries({ queryKey: ['orcamentos'] });
+    queryClient.invalidateQueries({ queryKey: ['faturas'] });
     refetchExpenses();
   };
 
@@ -305,6 +311,11 @@ export function Relatorios() {
         return;
       }
     }
+    
+    // Invalidar queries relacionadas para atualizar os dados automaticamente
+    queryClient.invalidateQueries({ queryKey: ['faturas'] });
+    queryClient.invalidateQueries({ queryKey: ['orcamentos'] });
+    queryClient.invalidateQueries({ queryKey: ['despesas'] });
     refetchRevenues();
   };
 
@@ -318,6 +329,11 @@ export function Relatorios() {
       console.error('Erro ao deletar despesa:', error);
       return;
     }
+    
+    // Invalidar queries relacionadas para atualizar os dados automaticamente
+    queryClient.invalidateQueries({ queryKey: ['despesas'] });
+    queryClient.invalidateQueries({ queryKey: ['orcamentos'] });
+    queryClient.invalidateQueries({ queryKey: ['faturas'] });
     refetchExpenses();
   };
 
@@ -331,6 +347,11 @@ export function Relatorios() {
       console.error('Erro ao deletar fatura:', error);
       return;
     }
+    
+    // Invalidar queries relacionadas para atualizar os dados automaticamente
+    queryClient.invalidateQueries({ queryKey: ['faturas'] });
+    queryClient.invalidateQueries({ queryKey: ['orcamentos'] });
+    queryClient.invalidateQueries({ queryKey: ['despesas'] });
     refetchRevenues();
   };
 
