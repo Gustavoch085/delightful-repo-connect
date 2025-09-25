@@ -56,7 +56,7 @@ export function Dashboard() {
 
     const vendasOrcamentos = orcamentos
       .filter(orcamento => 
-        orcamento.status === 'Finalizado' && 
+        (orcamento.status === 'Finalizado' || orcamento.status === 'Venda Gerada') && 
         (isCurrentMonth(orcamento.created_at) || (orcamento.delivery_date && isCurrentMonth(orcamento.delivery_date)))
       )
       .reduce((total, orcamento) => {

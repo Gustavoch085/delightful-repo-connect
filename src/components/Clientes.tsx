@@ -111,8 +111,12 @@ export function Clientes() {
       if (error) throw error;
       return clientId;
     },
-    onSuccess: () => {
+    onSuccess: (clientId, variables) => {
+      const deletedClient = clients.find(c => c.id === clientId);
       queryClient.invalidateQueries({ queryKey: ['clientes'] });
+      if (deletedClient) {
+        addLog('delete', 'cliente', deletedClient.name);
+      }
     }
   });
 

@@ -89,8 +89,12 @@ export function Produtos() {
       if (error) throw error;
       return productId;
     },
-    onSuccess: () => {
+    onSuccess: (productId, variables) => {
+      const deletedProduct = products.find(p => p.id === productId);
       queryClient.invalidateQueries({ queryKey: ['produtos'] });
+      if (deletedProduct) {
+        addLog('delete', 'produto', deletedProduct.name);
+      }
     }
   });
 

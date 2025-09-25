@@ -342,11 +342,16 @@ export function Orcamentos() {
       if (error) throw error;
       return budgetId;
     },
-    onSuccess: async () => {
+    onSuccess: async (budgetId, variables) => {
       console.log('Orçamento deletado com sucesso!');
       
+      const deletedBudget = budgets.find(b => b.id === budgetId);
       queryClient.invalidateQueries({ queryKey: ['orcamentos'] });
       await refetch();
+      
+      if (deletedBudget) {
+        addLog('delete', 'orcamento', deletedBudget.title, `Cliente: ${deletedBudget.client_name}`);
+      }
       
       toast({
         title: "Orçamento excluído",
@@ -425,7 +430,12 @@ export function Orcamentos() {
       
       await refetch();
       
-      addLog('edit', 'orcamento', data.title, `Status alterado para: ${data.status}`);
+      // Adicionar log específico para venda gerada
+      if (data.status === 'Venda Gerada') {
+        addLog('edit', 'orcamento', data.title, `Venda gerada - Cliente: ${data.client_name} - Valor: R$ ${data.total}`);
+      } else {
+        addLog('edit', 'orcamento', data.title, `Status alterado para: ${data.status}`);
+      }
       
       let description = `Status do orçamento alterado para ${data.status}.`;
       if (data.status === 'Venda Gerada') {

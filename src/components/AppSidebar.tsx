@@ -53,12 +53,6 @@ const menuItems = [
     permission: "vendas",
   },
   {
-    title: "Agenda",
-    url: "/agenda",
-    icon: CalendarCheck,
-    permission: "agenda",
-  },
-  {
     title: "Logs",
     url: "/logs",
     icon: FileX,

@@ -12,12 +12,14 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { PDFGenerator } from "./PDFGenerator";
+import { useLogs } from "@/contexts/LogsContext";
 
 export function Vendas() {
   const [showVendasRealizadas, setShowVendasRealizadas] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { addLog } = useLogs();
 
   // Buscar vendas geradas (para o botão Finalizar Serviço)
   const { data: vendasGeradas = [], isLoading: isLoadingGeradas, refetch: refetchGeradas } = useQuery({
@@ -96,10 +98,17 @@ export function Vendas() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data, vendaId) => {
+      // Adicionar log de venda finalizada
+      const venda = vendasGeradas.find(v => v.id === vendaId);
+      if (venda) {
+        addLog('edit', 'orcamento', venda.title, `Venda finalizada - Cliente: ${venda.client_name} - Valor: R$ ${venda.total}`);
+      }
+      
       queryClient.invalidateQueries({ queryKey: ['vendas-geradas'] });
       queryClient.invalidateQueries({ queryKey: ['vendas-realizadas'] });
       queryClient.invalidateQueries({ queryKey: ['orcamentos-agenda'] });
+      queryClient.invalidateQueries({ queryKey: ['orcamentos'] });
       refetchGeradas();
       
       toast({
@@ -136,7 +145,13 @@ export function Vendas() {
       
       if (orcamentoError) throw orcamentoError;
     },
-    onSuccess: () => {
+    onSuccess: (result, vendaId) => {
+      // Adicionar log de venda excluída
+      const venda = vendasRealizadas.find(v => v.id === vendaId);
+      if (venda) {
+        addLog('delete', 'orcamento', venda.title, `Venda excluída - Cliente: ${venda.client_name} - Valor: R$ ${venda.total}`);
+      }
+      
       queryClient.invalidateQueries({ queryKey: ['vendas-realizadas'] });
       refetchRealizadas();
       
