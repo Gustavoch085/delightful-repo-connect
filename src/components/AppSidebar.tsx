@@ -79,16 +79,7 @@ export function AppSidebar() {
     <Sidebar className="bg-crm-dark border-crm-border">
       <SidebarHeader className="border-b border-crm-border">
         <div className="p-4 flex justify-center">
-          <img 
-            src="/lovable-uploads/5e33d1c8-1407-4145-b0cd-10aceaa0308a.png" 
-            alt="Fortal CRM" 
-            className="h-8 w-auto object-contain max-w-full"
-            onError={(e) => {
-              console.log('Erro ao carregar logo:', e);
-              e.currentTarget.style.display = 'none';
-            }}
-            loading="eager"
-          />
+          <h1 className="text-xl font-bold text-white">Etherium CRM</h1>
         </div>
       </SidebarHeader>
       
@@ -118,17 +109,8 @@ export function AppSidebar() {
       <SidebarFooter className="border-t border-crm-border">
         <div className="p-4 space-y-3">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden">
-              <img 
-                src="/lovable-uploads/5e33d1c8-1407-4145-b0cd-10aceaa0308a.png" 
-                alt="User Avatar" 
-                className="h-10 w-10 object-contain max-w-full"
-                onError={(e) => {
-                  console.log('Erro ao carregar avatar:', e);
-                  e.currentTarget.style.display = 'none';
-                }}
-                loading="eager"
-              />
+            <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center">
+              <Users className="h-6 w-6 text-primary" />
             </div>
             <div className="flex-1">
               <p className="text-sm text-white">{user?.name}</p>

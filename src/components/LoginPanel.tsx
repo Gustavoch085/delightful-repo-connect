@@ -29,7 +29,7 @@ export function LoginPanel() {
     if (success) {
       toast({
         title: "Login realizado com sucesso!",
-        description: "Bem-vindo ao Fortal CRM",
+        description: "Bem-vindo ao Etherium CRM",
       });
     } else {
       toast({
@@ -45,11 +45,7 @@ export function LoginPanel() {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <div className="flex items-center justify-center mb-4">
-            <img 
-              src="/lovable-uploads/b7ec195a-be51-4c1c-a46c-fc8abbb9e651.png" 
-              alt="Fortal CRM Logo" 
-              className="h-20 w-auto object-contain"
-            />
+            <h1 className="text-2xl font-bold text-primary">Etherium CRM</h1>
           </div>
           <CardTitle className="text-2xl text-center">Bem-vindo de volta</CardTitle>
           <CardDescription className="text-center">
