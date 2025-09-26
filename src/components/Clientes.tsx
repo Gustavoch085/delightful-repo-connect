@@ -43,6 +43,34 @@ export function Clientes() {
     }
   });
 
+  // Fetch despesas (compras) para mostrar por cliente
+  const { data: expenses = [] } = useQuery({
+    queryKey: ['despesas'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('despesas')
+        .select('*')
+        .order('date', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  // Fetch faturas (vendas) para mostrar por cliente
+  const { data: revenues = [] } = useQuery({
+    queryKey: ['faturas'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('faturas')
+        .select('*')
+        .order('date', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
   // Create client mutation
   const createClientMutation = useMutation({
     mutationFn: async (clientData: any) => {
@@ -128,15 +156,43 @@ export function Clientes() {
     }).format(numericValue);
   };
 
+  const formatDateDisplay = (dateString: string) => {
+    if (!dateString) return "";
+    
+    if (dateString.includes('-')) {
+      const [year, month, day] = dateString.split('-');
+      const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      return date.toLocaleDateString('pt-BR');
+    }
+    
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR');
+  };
+
+  const getClientTransactions = (clientName: string) => {
+    const clientExpenses = expenses.filter(expense => (expense.category || '').toLowerCase() === clientName.toLowerCase());
+    const clientRevenues = revenues.filter(revenue => (revenue.client_name || '').toLowerCase() === clientName.toLowerCase());
+    
+    return {
+      expenses: clientExpenses,
+      revenues: clientRevenues,
+      totalExpenses: clientExpenses.reduce((total, expense) => total + parseFloat(expense.amount?.toString() || '0'), 0),
+      totalRevenues: clientRevenues.reduce((total, revenue) => total + parseFloat(revenue.value?.toString() || revenue.amount?.toString() || '0'), 0)
+    };
+  };
+
   const calculateClientStats = (clientName: string) => {
     const clientBudgets = budgets.filter(budget => budget.client_name === clientName);
     const totalSpent = clientBudgets.reduce((total, budget) => {
       return total + parseFloat(budget.total?.toString() || '0');
     }, 0);
     
+    const transactions = getClientTransactions(clientName);
+    
     return {
       totalSpent: formatCurrency(totalSpent),
-      orders: clientBudgets.length
+      orders: clientBudgets.length,
+      transactions
     };
   };
 
@@ -256,6 +312,28 @@ export function Clientes() {
                   <p className="text-gray-300 text-sm mb-4">{client.cidade}</p>
                 )}
                 
+                {/* Transações do Cliente */}
+                <div className="mb-4">
+                  <h4 className="text-white text-sm font-semibold mb-2">Transações Recentes</h4>
+                  <div className="max-h-32 overflow-y-auto space-y-1">
+                    {stats.transactions.expenses.slice(0, 3).map((expense) => (
+                      <div key={expense.id} className="flex justify-between text-xs">
+                        <span className="text-gray-400">{expense.title} • {formatDateDisplay(expense.date)}</span>
+                        <span className="text-red-400">- {formatCurrency(parseFloat(expense.amount?.toString() || '0'))}</span>
+                      </div>
+                    ))}
+                    {stats.transactions.revenues.slice(0, 3).map((revenue) => (
+                      <div key={revenue.id} className="flex justify-between text-xs">
+                        <span className="text-gray-400">{revenue.title} • {formatDateDisplay(revenue.date)}</span>
+                        <span className="text-green-400">+ {formatCurrency(parseFloat(revenue.value?.toString() || revenue.amount?.toString() || '0'))}</span>
+                      </div>
+                    ))}
+                    {stats.transactions.expenses.length === 0 && stats.transactions.revenues.length === 0 && (
+                      <p className="text-gray-500 text-xs">Nenhuma transação encontrada</p>
+                    )}
+                  </div>
+                </div>
+                
                 <div className="flex justify-between items-center pt-4 border-t border-crm-border">
                   <div>
                     <p className="text-gray-400 text-xs">Total gasto</p>
@@ -264,6 +342,17 @@ export function Clientes() {
                   <div>
                     <p className="text-gray-400 text-xs">Pedidos</p>
                     <p className="text-white font-semibold">{stats.orders}</p>
+                  </div>
+                </div>
+                
+                <div className="flex justify-between items-center pt-2">
+                  <div>
+                    <p className="text-gray-400 text-xs">Compras</p>
+                    <p className="text-red-400 font-semibold">{formatCurrency(stats.transactions.totalExpenses)}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-400 text-xs">Vendas</p>
+                    <p className="text-green-400 font-semibold">{formatCurrency(stats.transactions.totalRevenues)}</p>
                   </div>
                 </div>
               </CardContent>

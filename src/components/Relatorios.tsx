@@ -196,34 +196,15 @@ export function Relatorios() {
     return groups;
   }, {} as Record<string, any[]>);
 
-  // Agrupar vendas por cliente
-  const revenuesByClient = revenues.reduce((groups, revenue) => {
-    const clientName = revenue.client_name || 'Sem Cliente';
-    if (!groups[clientName]) {
-      groups[clientName] = [];
-    }
-    groups[clientName].push(revenue);
-    return groups;
-  }, {} as Record<string, any[]>);
-
-  // Combinar despesas e vendas por cliente
-  const combinedClientTransactions = selectedClient === "all" 
-    ? [...expenses, ...revenues]
-    : [
-        ...expenses.filter(expense => (expense.category || 'Sem Cliente') === selectedClient),
-        ...revenues.filter(revenue => (revenue.client_name || 'Sem Cliente') === selectedClient)
-      ];
-
-  // Filtrar despesas por cliente selecionado (mantendo para compatibilidade)
+  // Filtrar despesas por cliente selecionado
   const filteredExpenses = selectedClient === "all" 
     ? expenses 
     : expenses.filter(expense => (expense.category || 'Sem Cliente') === selectedClient);
 
-  // Obter lista única de clientes das despesas e vendas
-  const clientsFromExpenses = Array.from(new Set([
-    ...expenses.map(expense => expense.category || 'Sem Cliente'),
-    ...revenues.map(revenue => revenue.client_name || 'Sem Cliente')
-  ])).sort();
+  // Obter lista única de clientes das despesas
+  const clientsFromExpenses = Array.from(new Set(
+    expenses.map(expense => expense.category || 'Sem Cliente')
+  )).sort();
 
   const totalExpenses = calculateTotal(expenses, true); // Filtra pelo mês atual
   const totalRevenues = calculateTotal(revenues, true); // Filtra pelo mês atual
@@ -463,46 +444,29 @@ export function Relatorios() {
                 </Button>
               </div>
 
-              {combinedClientTransactions.length > 0 ? (
+              {filteredExpenses.length > 0 ? (
                 <div className="space-y-4">
-                  {combinedClientTransactions.map((transaction) => (
-                    <div key={transaction.id} className="flex justify-between items-center p-4 rounded-lg border border-crm-border">
+                  {filteredExpenses.map((expense) => (
+                    <div key={expense.id} className="flex justify-between items-center p-4 rounded-lg border border-crm-border">
                       <div>
-                        <p className="text-white font-medium">{transaction.title || transaction.description}</p>
+                        <p className="text-white font-medium">{expense.title || expense.description}</p>
                         <p className="text-gray-400 text-sm">
-                          {transaction.category || (transaction as any).client_name || 'Sem Cliente'} • {formatDateDisplay(transaction.date)}
-                          {(transaction as any).client_name && <span className="ml-2 text-green-400">(Venda)</span>}
-                          {transaction.category && !(transaction as any).client_name && <span className="ml-2 text-red-400">(Compra)</span>}
+                          {expense.category || 'Sem Cliente'} • {formatDateDisplay(expense.date)}
                         </p>
                       </div>
                       <div className="flex items-center gap-4">
-                        {(transaction as any).client_name ? (
-                          <p className="text-green-400 font-semibold">+ {formatCurrency(parseFloat(transaction.amount?.toString() || (transaction as any).value?.toString() || '0'))}</p>
-                        ) : (
-                          <p className="text-red-400 font-semibold">- {formatCurrency(parseFloat(transaction.amount?.toString() || '0'))}</p>
-                        )}
+                        <p className="text-red-400 font-semibold">- {formatCurrency(parseFloat(expense.amount?.toString() || '0'))}</p>
                         <div className="flex gap-2">
                           <Button 
                             size="sm" 
                             variant="ghost" 
                             onClick={() => {
-                              if ((transaction as any).client_name) {
-                                // É uma venda/fatura
-                                setEditingFatura({
-                                  ...transaction,
-                                  client: (transaction as any).client_name,
-                                  value: `+ R$ ${parseFloat(transaction.amount?.toString() || (transaction as any).value?.toString() || '0').toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                                });
-                                setFaturaModalOpen(true);
-                              } else {
-                                // É uma despesa
-                                setEditingDespesa({
-                                  ...transaction,
-                                  client: transaction.category,
-                                  value: `- R$ ${parseFloat(transaction.amount?.toString() || '0').toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                                });
-                                setDespesaModalOpen(true);
-                              }
+                              setEditingDespesa({
+                                ...expense,
+                                client: expense.category,
+                                value: `- R$ ${parseFloat(expense.amount?.toString() || '0').toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                              });
+                              setDespesaModalOpen(true);
                             }}
                             className="text-gray-400 hover:text-white"
                           >
@@ -511,13 +475,7 @@ export function Relatorios() {
                           <Button 
                             size="sm" 
                             variant="ghost" 
-                            onClick={() => {
-                              if ((transaction as any).client_name) {
-                                handleDeleteRevenue(transaction.id);
-                              } else {
-                                handleDeleteExpense(transaction.id);
-                              }
-                            }}
+                            onClick={() => handleDeleteExpense(expense.id)}
                             className="text-gray-400 hover:text-red-400"
                           >
                             <Trash2 className="h-4 w-4" />
